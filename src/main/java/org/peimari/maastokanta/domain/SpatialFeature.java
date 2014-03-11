@@ -12,6 +12,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity
@@ -34,6 +35,13 @@ public class SpatialFeature extends AbstractEntity {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastModified;
+
+    @Version
+    private Long version;
+
+    @ManyToOne
+    @NotNull
+    private UserGroup group;
 
     public String getDescription() {
         return description;
@@ -59,18 +67,12 @@ public class SpatialFeature extends AbstractEntity {
         this.title = title;
     }
 
-    @Version
-    private Long version;
-
-    @ManyToOne
-    private AbstractEntity parent;
-
-    public AbstractEntity getParent() {
-        return parent;
+    public UserGroup getGroup() {
+        return group;
     }
 
-    public void setParent(AbstractEntity parent) {
-        this.parent = parent;
+    public void setGroup(UserGroup group) {
+        this.group = group;
     }
 
     public Long getVersion() {
@@ -88,6 +90,9 @@ public class SpatialFeature extends AbstractEntity {
 
     @PrePersist
     private void prepersist() {
+        if (group != null) {
+            group.getFeatures().add(this);
+        }
         lastModified = new Date();
     }
 

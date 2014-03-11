@@ -6,15 +6,12 @@
 
 package org.peimari.maastokanta.backend;
 
-import java.util.List;
-import org.peimari.maastokanta.domain.SpatialFeature;
-import org.peimari.maastokanta.domain.UserGroup;
+import org.peimari.maastokanta.domain.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  *
  */
-public interface FeatureRepository extends JpaRepository<SpatialFeature, Long> {
+public interface PersonRepository extends JpaRepository<Person, String> {
     
-    List<SpatialFeature> findByGroup(UserGroup usergroup);
 }

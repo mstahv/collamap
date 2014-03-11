@@ -18,7 +18,7 @@ public class AbstractEntity {
 
     @Override
     public boolean equals(Object obj) {
-        if ((obj.getClass() == this.getClass()) && id != null) {
+        if (obj != null && (obj.getClass() == this.getClass()) && id != null) {
             return id.equals(((AbstractEntity) obj).id);
         }
         return super.equals(obj);

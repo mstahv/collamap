@@ -7,28 +7,23 @@ package org.peimari.maastokanta;
 
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
 import java.util.List;
-import javax.annotation.PostConstruct;
 import org.peimari.maastokanta.backend.FeatureRepository;
 import org.peimari.maastokanta.backend.StyleRepository;
 import org.peimari.maastokanta.backend.TagRepository;
+import org.peimari.maastokanta.backend.UserService;
 import org.peimari.maastokanta.domain.AreaFeature;
 import org.peimari.maastokanta.domain.LineFeature;
 import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
-import org.peimari.maastokanta.domain.Style;
-import org.peimari.maastokanta.domain.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.vaadin.addon.leaflet.AbstractLeafletLayer;
@@ -39,7 +34,6 @@ import org.vaadin.addon.leaflet.LeafletClickListener;
 import org.vaadin.addon.leaflet.util.JTSUtil;
 import org.vaadin.maddon.button.MButton;
 import org.vaadin.maddon.fields.MTable;
-import org.vaadin.maddon.label.Header;
 import org.vaadin.maddon.layouts.MHorizontalLayout;
 import org.vaadin.maddon.layouts.MVerticalLayout;
 import org.vaadin.spring.VaadinUI;
@@ -60,7 +54,6 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
     @Autowired
     StyleRepository styles;
 
-    private Label infoText = new Header("Maastokanta");
     private MTable<SpatialFeature> table = new MTable().withFullWidth().withProperties("id", "title", "Actions");
     private Button addNew = new MButton(FontAwesome.MAP_MARKER, this);
     private Button addNewWithRoute = new MButton(FontAwesome.MINUS, this);
@@ -73,9 +66,19 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
 
     @Autowired
     FeatureEditor editor;
+    
+    @Autowired
+    UserService userService;
 
     @Override
     protected void init(VaadinRequest request) {
+        if(!userService.isAuthtenticated()) {
+            Page.getCurrent().setLocation(request.getContextPath() + "/auth");
+            return;
+        }
+        
+        Page.getCurrent().setTitle("Collamap: " + userService.getGroup().getName());
+        
         table.addGeneratedColumn("Actions", new Table.ColumnGenerator() {
 
             @Override
@@ -111,7 +114,7 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
         peruskartta.setDetectRetina(true);
 
         HorizontalLayout actions = new MHorizontalLayout(addNew, addNewWithRoute, addNewWithArea);
-        VerticalLayout layout = new MVerticalLayout(infoText, actions, map, table).expand(map, table);
+        VerticalLayout layout = new MVerticalLayout(actions, map, table).expand(map, table);
         table.setSizeFull();
         layout.setSizeFull();
         setContent(layout);
@@ -120,40 +123,8 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
 
     }
 
-    @PostConstruct
-    public void loadDemoData() {
-        if (repo.count() > 0) {
-            return;
-        }
-        styles.save(new Style("Important"));
-        Style trivial = new Style("Trivial");
-        trivial = styles.save(trivial);
-        styles.save(new Style("Normal"));
-
-        PointFeature theEvent = new PointFeature();
-        theEvent.setTitle("Example event");
-        theEvent.setStyle(trivial);
-        GeometryFactory factory = new GeometryFactory();
-        theEvent.setLocation(factory.createPoint(new Coordinate(23, 61)));
-        repo.save(theEvent);
-
-        LineFeature eventWithPath = new LineFeature();
-        eventWithPath.setStyle(trivial);
-        Coordinate[] coords = new Coordinate[]{new Coordinate(23, 61),
-            new Coordinate(23, 61.3)};
-        eventWithPath.setLine(factory.createLineString(coords));
-        eventWithPath.setTitle("MTB cup 1/10");
-        repo.save(eventWithPath);
-
-        tags.save(new Tag("Own"));
-        tags.save(new Tag("Has restrictions"));
-        tags.save(new Tag("Nice"));
-        tags.save(new Tag("Wet"));
-        tags.save(new Tag("Temporarely closed"));
-    }
-
     private void loadEvents() {
-        final List<SpatialFeature> events = repo.findAll();
+        final List<SpatialFeature> events = repo.findByGroup(userService.getGroup());
         table.setBeans(events);
 
         /* ... and map */
@@ -178,7 +149,12 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
                 map.addLayer(layer);
             }
         }
-        map.zoomToContent();
+        if(events.isEmpty()) {
+            map.setCenter(61, 22);
+            map.setZoomLevel(16);
+        } else {
+            map.zoomToContent();
+        }
 
     }
 
@@ -194,6 +170,7 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
         } else {
             throw new IllegalArgumentException();
         }
+        newFeature.setGroup(userService.getGroup());
         editor.init(newFeature);
         editor.setCenterAndZoom(map.getCenter(), map.getZoomLevel());
     }

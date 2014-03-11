@@ -1,2 +1,4 @@
 src/main/public/VAADIN/widgetsets
 src/main/resources/VAADIN/widgetsets
+
+src/main/resources/application.properties
