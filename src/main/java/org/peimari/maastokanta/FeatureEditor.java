@@ -11,7 +11,9 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.log4j.Logger;
+import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.FeatureRepository;
+import org.peimari.maastokanta.backend.GroupRepository;
 import org.peimari.maastokanta.backend.StyleRepository;
 import org.peimari.maastokanta.backend.TagRepository;
 import org.peimari.maastokanta.domain.AreaFeature;
@@ -19,6 +21,7 @@ import org.peimari.maastokanta.domain.LineFeature;
 import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.Style;
+import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
@@ -41,11 +44,13 @@ import org.vaadin.spring.VaadinComponent;
 public class FeatureEditor extends Window implements ClickListener {
 
     @Autowired
+    AppService service;
+    @Autowired
     FeatureRepository repo;
     @Autowired
-    TagRepository tags;
+    GroupRepository groups;
     @Autowired
-    StyleRepository styles;
+    TagRepository tags;
 
     private SpatialFeature feature;
 
@@ -75,18 +80,17 @@ public class FeatureEditor extends Window implements ClickListener {
                 return option.getName();
             }
         });
-        style.setOptions(styles.findAll());
-        
+        style.setOptions(service.getStyles());
+
         /* Choose suitable custom field for geometry */
         if (feature instanceof PointFeature) {
             geometryField = location = new PointField();
-            geometryField.getMap().setZoomLevel(15);
         } else if (feature instanceof AreaFeature) {
             geometryField = area = new LinearRingField();
         } else if (feature instanceof LineFeature) {
             geometryField = line = new LineStringField();
         }
-        
+
         /* Configure the sub window editing the pojo */
         setCaption("Edit event");
         setHeight("80%");
@@ -97,18 +101,23 @@ public class FeatureEditor extends Window implements ClickListener {
         /* Build layout */
         HorizontalLayout content = new HorizontalLayout(
                 new MVerticalLayout(title, description, style,
-                    new MHorizontalLayout(save, cancel)), geometryField);
+                        new MHorizontalLayout(save, cancel)), geometryField);
         content.setSizeFull();
         setContent(content);
 
         /* Bind data to fields */
         BeanBinder.bind(feature, this);
-        
+
+        if (feature instanceof PointFeature) {
+            geometryField.getMap().setZoomLevel(DEFAULT_ZOOM_FOR_POINTS);
+        }
+
         // Show editor
         if (getParent() == null) {
             UI.getCurrent().addWindow(this);
         }
     }
+    private static final int DEFAULT_ZOOM_FOR_POINTS = 15;
 
     @Override
     public void buttonClick(ClickEvent event) {

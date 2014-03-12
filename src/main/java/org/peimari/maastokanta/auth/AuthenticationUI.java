@@ -9,7 +9,7 @@ import com.vaadin.annotations.Push;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.UI;
 import org.peimari.maastokanta.backend.PersonRepository;
-import org.peimari.maastokanta.backend.UserService;
+import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.domain.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,7 +25,7 @@ import org.vaadin.spring.VaadinUI;
 public class AuthenticationUI extends UI {
 
     @Autowired
-    UserService userService;
+    AppService appService;
 
     @Autowired
     PersonRepository personRepository;
@@ -39,7 +39,11 @@ public class AuthenticationUI extends UI {
     @Override
     protected void init(VaadinRequest request) {
         setPollInterval(1000);
-        setContent(loginView);
+        if(appService.getPerson() != null) {
+            setContent(groupsView);
+        } else {
+            setContent(loginView);
+        }
     }
 
     public void setUser(String email, String displayName) {
@@ -50,8 +54,7 @@ public class AuthenticationUI extends UI {
             person.setDisplayName(displayName);
             person = personRepository.save(person);
         }
-        userService.setPerson(person);
-        groupsView.init();
+        appService.setPerson(person);
         setContent(groupsView);
     }
 

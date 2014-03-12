@@ -19,9 +19,11 @@ import java.util.List;
 import org.peimari.maastokanta.backend.FeatureRepository;
 import org.peimari.maastokanta.backend.StyleRepository;
 import org.peimari.maastokanta.backend.TagRepository;
-import org.peimari.maastokanta.backend.UserService;
+import org.peimari.maastokanta.backend.AppService;
+import org.peimari.maastokanta.backend.PersonRepository;
 import org.peimari.maastokanta.domain.AreaFeature;
 import org.peimari.maastokanta.domain.LineFeature;
+import org.peimari.maastokanta.domain.Person;
 import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +55,8 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
     TagRepository tags;
     @Autowired
     StyleRepository styles;
+    @Autowired
+    PersonRepository personRepository;
 
     private MTable<SpatialFeature> table = new MTable().withFullWidth().withProperties("id", "title", "Actions");
     private Button addNew = new MButton(FontAwesome.MAP_MARKER, this);
@@ -66,19 +70,32 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
 
     @Autowired
     FeatureEditor editor;
-    
+
     @Autowired
-    UserService userService;
+    AppService userService;
+
+    private static boolean AUTOLOGIN_FOR_DEVELOPMENT = true;
 
     @Override
     protected void init(VaadinRequest request) {
-        if(!userService.isAuthtenticated()) {
+        if (AUTOLOGIN_FOR_DEVELOPMENT && userService.getPerson() == null) {
+            Person person = personRepository.findOne("matti@vaadin.com");
+            if (person == null) {
+                person = new Person();
+                person.setDisplayName("Matti Tahvonen");
+                person.setEmail("matti@vaadin.com");
+                person = personRepository.save(person);
+            }
+            userService.setPerson(person);
+        }
+
+        if (!userService.isAuthtenticated()) {
             Page.getCurrent().setLocation(request.getContextPath() + "/auth");
             return;
         }
-        
+
         Page.getCurrent().setTitle("Collamap: " + userService.getGroup().getName());
-        
+
         table.addGeneratedColumn("Actions", new Table.ColumnGenerator() {
 
             @Override
@@ -149,7 +166,7 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
                 map.addLayer(layer);
             }
         }
-        if(events.isEmpty()) {
+        if (events.isEmpty()) {
             map.setCenter(61, 22);
             map.setZoomLevel(16);
         } else {

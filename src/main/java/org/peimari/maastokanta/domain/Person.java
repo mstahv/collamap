@@ -5,8 +5,12 @@
  */
 package org.peimari.maastokanta.domain;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 
 /**
  *
@@ -19,6 +23,9 @@ public class Person {
 
     @Id
     private String email;
+    
+    @ManyToMany(fetch = FetchType.EAGER)
+    private List<UserGroup> groups = new ArrayList<>();
 
     public String getEmail() {
         return email;
@@ -34,6 +41,14 @@ public class Person {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public List<UserGroup> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<UserGroup> groups) {
+        this.groups = groups;
     }
 
     @Override

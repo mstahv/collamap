@@ -90,9 +90,6 @@ public class SpatialFeature extends AbstractEntity {
 
     @PrePersist
     private void prepersist() {
-        if (group != null) {
-            group.getFeatures().add(this);
-        }
         lastModified = new Date();
     }
 
