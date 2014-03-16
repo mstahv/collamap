@@ -1,10 +1,10 @@
 package org.peimari.maastokanta.domain;
 
-import javax.persistence.Entity;
 
 import com.vividsolutions.jts.geom.Point;
+import org.springframework.data.neo4j.annotation.NodeEntity;
 
-@Entity
+@NodeEntity
 public class PointFeature extends SpatialFeature {
 
 	public Point getLocation() {

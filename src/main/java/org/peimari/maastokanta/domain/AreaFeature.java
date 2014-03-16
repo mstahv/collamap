@@ -1,9 +1,9 @@
 package org.peimari.maastokanta.domain;
 
 import com.vividsolutions.jts.geom.LinearRing;
-import javax.persistence.Entity;
+import org.springframework.data.neo4j.annotation.NodeEntity;
 
-@Entity
+@NodeEntity
 public class AreaFeature extends SpatialFeature {
 
 	public LinearRing getArea() {

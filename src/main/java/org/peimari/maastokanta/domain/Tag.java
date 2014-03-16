@@ -1,14 +1,14 @@
 package org.peimari.maastokanta.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.Version;
+import org.springframework.data.neo4j.annotation.GraphId;
+import org.springframework.data.neo4j.annotation.NodeEntity;
 
-@Entity
+@NodeEntity
 public class Tag extends AbstractEntity {
 
 	private String name;
 	
-	@Version
+	@GraphId
 	private Long version;
 
 	public Tag() {

@@ -1,19 +1,12 @@
 package org.peimari.maastokanta.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.Version;
+import org.springframework.data.neo4j.annotation.NodeEntity;
 
-@Entity
+@NodeEntity
 public class Style extends AbstractEntity {
 
     private String name;
     private String color;
-
-    @Version
-    private Long version;
-
-    @ManyToOne
     private UserGroup group;
 
     public Style() {
@@ -40,14 +33,6 @@ public class Style extends AbstractEntity {
 
     public void setColor(String color) {
         this.color = color;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    protected void setVersion(Long version) {
-        this.version = version;
     }
 
     public String getName() {

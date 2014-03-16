@@ -1,10 +1,9 @@
 package org.peimari.maastokanta.domain;
 
-import javax.persistence.Entity;
-
 import com.vividsolutions.jts.geom.LineString;
+import org.springframework.data.neo4j.annotation.NodeEntity;
 
-@Entity
+@NodeEntity
 public class LineFeature extends SpatialFeature {
 
 	public LineString getLine() {

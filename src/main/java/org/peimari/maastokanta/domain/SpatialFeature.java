@@ -4,27 +4,15 @@ import com.vividsolutions.jts.geom.Geometry;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-@Entity
 public class SpatialFeature extends AbstractEntity {
 
-    @Column(name = "geometry", columnDefinition = "Geometry", nullable = true)
     private Geometry geom;
 
-    @ManyToOne
     private Style style;
 
-    @ManyToMany
     private Collection<Tag> tags = new HashSet<Tag>();
 
     @Size(max = 255)
@@ -33,13 +21,10 @@ public class SpatialFeature extends AbstractEntity {
     @Size(max = 36000)
     private String description;
 
-    @Temporal(TemporalType.TIMESTAMP)
     private Date lastModified;
 
-    @Version
     private Long version;
 
-    @ManyToOne
     @NotNull
     private UserGroup group;
 
@@ -88,7 +73,7 @@ public class SpatialFeature extends AbstractEntity {
         return "Feature[title:" + title + "]";
     }
 
-    @PrePersist
+    // TODO 
     private void prepersist() {
         lastModified = new Date();
     }

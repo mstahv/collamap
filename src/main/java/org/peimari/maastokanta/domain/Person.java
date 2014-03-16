@@ -7,24 +7,21 @@ package org.peimari.maastokanta.domain;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import org.springframework.data.neo4j.annotation.GraphId;
+import org.springframework.data.neo4j.annotation.NodeEntity;
 
 /**
  *
  * @author mstahv
  */
-@Entity
+@NodeEntity
 public class Person {
 
     private String displayName;
 
-    @Id
+    @GraphId
     private String email;
     
-    @ManyToMany(fetch = FetchType.EAGER)
     private List<UserGroup> groups = new ArrayList<>();
 
     public String getEmail() {
