@@ -4,24 +4,18 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.log4j.Logger;
 import org.peimari.maastokanta.backend.AppService;
-import org.peimari.maastokanta.backend.FeatureRepository;
-import org.peimari.maastokanta.backend.GroupRepository;
-import org.peimari.maastokanta.backend.StyleRepository;
-import org.peimari.maastokanta.backend.TagRepository;
+import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.AreaFeature;
 import org.peimari.maastokanta.domain.LineFeature;
 import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.Style;
-import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
@@ -46,11 +40,7 @@ public class FeatureEditor extends Window implements ClickListener {
     @Autowired
     AppService service;
     @Autowired
-    FeatureRepository repo;
-    @Autowired
-    GroupRepository groups;
-    @Autowired
-    TagRepository tags;
+    Repository groups;
 
     private SpatialFeature feature;
 
@@ -80,7 +70,7 @@ public class FeatureEditor extends Window implements ClickListener {
                 return option.getName();
             }
         });
-        style.setOptions(service.getStyles());
+        style.setOptions(service.getGroup().getStyles());
 
         /* Choose suitable custom field for geometry */
         if (feature instanceof PointFeature) {
@@ -122,20 +112,12 @@ public class FeatureEditor extends Window implements ClickListener {
     @Override
     public void buttonClick(ClickEvent event) {
         if (event.getButton() == save) {
-            try {
-                repo.save(feature);
-            } catch (Exception e) {
-                // Most likely a concurrent modification
-                Notification.show(
-                        "Saving entity failed due to concurrent modification",
-                        Notification.Type.ERROR_MESSAGE);
-                Logger.getLogger(FeatureEditor.class).info("JPA Exception", e);
-                // TODO refresh
-            }
+            // TODO commit!? Need Buffering!?, or remove totally??
+            
+            
         } else {
-            if (feature.getId() != null) {
-                // TODO refresh
-            }
+            // TODO refresh!? Need Buffering!?
+            
         }
         close();
     }

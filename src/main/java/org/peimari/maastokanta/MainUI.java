@@ -8,24 +8,26 @@ package org.peimari.maastokanta;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
+import com.vaadin.server.Resource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import java.util.List;
-import org.peimari.maastokanta.backend.FeatureRepository;
-import org.peimari.maastokanta.backend.StyleRepository;
-import org.peimari.maastokanta.backend.TagRepository;
 import org.peimari.maastokanta.backend.AppService;
-import org.peimari.maastokanta.backend.PersonRepository;
+import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.AreaFeature;
 import org.peimari.maastokanta.domain.LineFeature;
 import org.peimari.maastokanta.domain.Person;
 import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
+import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.vaadin.addon.leaflet.AbstractLeafletLayer;
@@ -48,100 +50,105 @@ import org.vaadin.spring.VaadinUI;
 @EnableAutoConfiguration
 @Widgetset("org.peimari.maastokanta.AppWidgetSet")
 public class MainUI extends UI implements Button.ClickListener, Window.CloseListener {
-
+    
     @Autowired
-    FeatureRepository repo;
-    @Autowired
-    TagRepository tags;
-    @Autowired
-    StyleRepository styles;
-    @Autowired
-    PersonRepository personRepository;
-
-    private MTable<SpatialFeature> table = new MTable().withFullWidth().withProperties("id", "title", "Actions");
-    private Button addNew = new MButton(FontAwesome.MAP_MARKER, this);
-    private Button addNewWithRoute = new MButton(FontAwesome.MINUS, this);
-    private Button addNewWithArea = new MButton(FontAwesome.SQUARE, this);
+    Repository groupRepository;
+    
+    private MTable<SpatialFeature> table = new MTable().withFullWidth().withProperties("title", "Actions");
+    private Button addNew = toolButton(FontAwesome.MAP_MARKER);
+    private Button addNewWithRoute = toolButton(FontAwesome.MINUS);
+    private Button addNewWithArea = toolButton(FontAwesome.SQUARE);
+    private Button save = toolButton(FontAwesome.FLOPPY_O);
+    private Component spacer = new Label("");
+    private Button logout = new MButton("logout", this);
+    private Button chooseGroup = new MButton("Other group...", this);
     private LMap map = new LMap();
     private LTileLayer osmTiles = new LTileLayer(
             "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
     LTileLayer peruskartta = new LTileLayer(
             "http://v3.tahvonen.fi/mvm71/tiles/peruskartta/{z}/{x}/{y}.png");
-
+    
     @Autowired
     FeatureEditor editor;
-
+    
     @Autowired
     AppService userService;
-
+    
     private static boolean AUTOLOGIN_FOR_DEVELOPMENT = true;
-
+    private UserGroup group;
+    
+    private final MButton toolButton(Resource icon) {
+        return new MButton(icon,this);
+    }
+    
     @Override
     protected void init(VaadinRequest request) {
         if (AUTOLOGIN_FOR_DEVELOPMENT && userService.getPerson() == null) {
-            Person person = personRepository.findOne("matti@vaadin.com");
+            Person person = groupRepository.getPerson("matti@vaadin.com");
             if (person == null) {
                 person = new Person();
                 person.setDisplayName("Matti Tahvonen");
                 person.setEmail("matti@vaadin.com");
-                person = personRepository.save(person);
+                groupRepository.persist(person);
             }
             userService.setPerson(person);
         }
-
+        
         if (!userService.isAuthtenticated()) {
             Page.getCurrent().setLocation(request.getContextPath() + "/auth");
             return;
         }
-
+        
+        group = userService.getGroup();
+        
         Page.getCurrent().setTitle("Collamap: " + userService.getGroup().getName());
-
+        
         table.addGeneratedColumn("Actions", new Table.ColumnGenerator() {
-
+            
             @Override
             public Object generateCell(Table source, final Object se,
                     Object columnId) {
                 final SpatialFeature feature = (SpatialFeature) se;
                 Button edit = new Button("Edit", new Button.ClickListener() {
-
+                    
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
                         editor.init(feature);
                     }
                 });
-
+                
                 Button delete = new Button("Delete", new Button.ClickListener() {
-
+                    
                     @Override
                     public void buttonClick(Button.ClickEvent event) {
-                        repo.delete(feature);
-                        table.removeItem(feature);
+                        group.getFeatures().remove(feature);
+                        loadEvents();
                     }
                 });
                 return new MHorizontalLayout(edit, delete);
             }
         });
-
+        
         loadEvents();
-
+        
         osmTiles.setAttributionString("© OpenStreetMap Contributors");
-
+        
         peruskartta.setAttributionString("Peruskartta: ©Maanmittauslaitos");
         peruskartta.setMaxZoom(18);
         peruskartta.setDetectRetina(true);
-
-        HorizontalLayout actions = new MHorizontalLayout(addNew, addNewWithRoute, addNewWithArea);
+        
+        HorizontalLayout actions = new MHorizontalLayout(addNew, addNewWithRoute, addNewWithArea, save, spacer, chooseGroup, logout).expand(spacer).withFullWidth();
         VerticalLayout layout = new MVerticalLayout(actions, map, table).expand(map, table);
         table.setSizeFull();
         layout.setSizeFull();
         setContent(layout);
-
+        
         editor.addCloseListener(this);
-
+        
     }
-
+    
     private void loadEvents() {
-        final List<SpatialFeature> events = repo.findByGroup(userService.getGroup());
+        final List<SpatialFeature> events = group.getFeatures();
         table.setBeans(events);
 
         /* ... and map */
@@ -157,7 +164,7 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
 
                 /* Add click listener to open event editor */
                 layer.addClickListener(new LeafletClickListener() {
-
+                    
                     @Override
                     public void onClick(LeafletClickEvent e) {
                         editor.init(spatialEvent);
@@ -172,11 +179,28 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
         } else {
             map.zoomToContent();
         }
-
+        
     }
-
+    
     @Override
     public void buttonClick(Button.ClickEvent event) {
+        if (event.getButton() == save) {
+            groupRepository.persist(group);
+            Notification.show("Saved!");
+            return;
+        }
+        if (event.getButton() == logout) {
+            userService.setGroup(null);
+            userService.setPerson(null);
+            Page.getCurrent().reload();
+            return;
+        }
+        if (event.getButton() == chooseGroup) {
+            userService.setGroup(null);
+            Page.getCurrent().reload();
+            return;
+        }
+        
         SpatialFeature newFeature;
         if (event.getButton() == addNew) {
             newFeature = new PointFeature();
@@ -187,15 +211,15 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
         } else {
             throw new IllegalArgumentException();
         }
-        newFeature.setGroup(userService.getGroup());
+        group.getFeatures().add(newFeature);
         editor.init(newFeature);
         editor.setCenterAndZoom(map.getCenter(), map.getZoomLevel());
     }
-
+    
     @Override
     public void windowClose(Window.CloseEvent e) {
         // refresh table after edit
         loadEvents();
     }
-
+    
 }

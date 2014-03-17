@@ -2,31 +2,23 @@ package org.peimari.maastokanta.domain;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
+import java.util.UUID;
 
-@Entity
 public class UserGroup extends AbstractEntity {
+    
+    private String id = UUID.randomUUID().toString();
 
     private String name;
     
-    @OneToMany(mappedBy = "group", fetch = FetchType.EAGER)
     private List<SpatialFeature> features = new ArrayList<>();
     
-    @OneToMany(mappedBy = "group")
-    @Cascade(CascadeType.ALL)
     private List<Style> styles = new ArrayList<>();
     
-    @ManyToOne
-    @NotNull
-    private Person admin;
-
     public UserGroup() {
+    }
+
+    public String getId() {
+        return id;
     }
 
     public UserGroup(String name) {
@@ -39,14 +31,6 @@ public class UserGroup extends AbstractEntity {
 
     public void setStyles(List<Style> styles) {
         this.styles = styles;
-    }
-
-    public Person getAdmin() {
-        return admin;
-    }
-    
-    public void setAdmin(Person admin) {
-        this.admin = admin;
     }
     
     public String getName() {
@@ -70,8 +54,8 @@ public class UserGroup extends AbstractEntity {
         return "Style[name:" + name + "]";
     }
 
-    public Style addStyle(String name, String color) {
-        return new Style(name, color, this);
+    public void addStyle(String name, String color) {
+        styles.add(new Style(name, color));
     }
 
 }

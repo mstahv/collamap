@@ -5,27 +5,26 @@
  */
 package org.peimari.maastokanta.domain;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author mstahv
  */
-@Entity
-public class Person {
+public class Person implements Serializable {
+    
+    static final long serialVersionUID = 1L;
 
     private String displayName;
 
-    @Id
     private String email;
     
-    @ManyToMany(fetch = FetchType.EAGER)
-    private List<UserGroup> groups = new ArrayList<>();
+    private final Map<String,String> idToGroup = new HashMap<>();
+
+    public Person() {
+    }
 
     public String getEmail() {
         return email;
@@ -43,28 +42,12 @@ public class Person {
         this.displayName = displayName;
     }
 
-    public List<UserGroup> getGroups() {
-        return groups;
+    public void addGroup(String id, String name) {
+        idToGroup.put(id, name);
     }
 
-    public void setGroups(List<UserGroup> groups) {
-        this.groups = groups;
+    public Map<String, String> getIdToGroup() {
+        return idToGroup;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Person) {
-            Person person = (Person) obj;
-            return email.equals(person.email);
-        }
-        return super.equals(obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return email.hashCode();
-    }
-    
-    
-    
 }

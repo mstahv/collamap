@@ -5,16 +5,12 @@
  */
 package org.peimari.maastokanta.auth;
 
-import com.vaadin.annotations.Push;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.UI;
-import org.peimari.maastokanta.backend.PersonRepository;
 import org.peimari.maastokanta.backend.AppService;
+import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.Person;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.vaadin.maddon.label.Header;
-import org.vaadin.maddon.layouts.MVerticalLayout;
 import org.vaadin.spring.VaadinUI;
 
 /**
@@ -25,10 +21,10 @@ import org.vaadin.spring.VaadinUI;
 public class AuthenticationUI extends UI {
 
     @Autowired
-    AppService appService;
+    AppService service;
 
     @Autowired
-    PersonRepository personRepository;
+    Repository repo;
 
     @Autowired
     GroupsView groupsView;
@@ -39,7 +35,7 @@ public class AuthenticationUI extends UI {
     @Override
     protected void init(VaadinRequest request) {
         setPollInterval(1000);
-        if(appService.getPerson() != null) {
+        if(service.getPerson() != null) {
             setContent(groupsView);
         } else {
             setContent(loginView);
@@ -47,14 +43,14 @@ public class AuthenticationUI extends UI {
     }
 
     public void setUser(String email, String displayName) {
-        Person person = personRepository.findOne(email);
+        Person person = repo.getPerson(email);
         if (person == null) {
             person = new Person();
             person.setEmail(email);
             person.setDisplayName(displayName);
-            person = personRepository.save(person);
+            repo.persist(person);
         }
-        appService.setPerson(person);
+        service.setPerson(person);
         setContent(groupsView);
     }
 
