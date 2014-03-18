@@ -9,15 +9,19 @@ import org.peimari.maastokanta.domain.Person;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Service
 @Scope(value = "session")
 public class AppService {
-    
+
     @Autowired
     Repository repo;
-    
+
+    @Autowired
+    Environment env;
+
     private Person person;
     private UserGroup group;
 
@@ -50,6 +54,10 @@ public class AppService {
         repo.saveUsers();
         repo.persist(group);
         return group;
+    }
+
+    public boolean isDevMode() {
+        return env.getProperty("devmode", "false").equals("true");
     }
 
 }

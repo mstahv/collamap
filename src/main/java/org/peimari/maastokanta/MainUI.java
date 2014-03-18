@@ -52,7 +52,7 @@ import org.vaadin.spring.VaadinUI;
 public class MainUI extends UI implements Button.ClickListener, Window.CloseListener {
     
     @Autowired
-    Repository groupRepository;
+    Repository repo;
     
     private MTable<SpatialFeature> table = new MTable().withFullWidth().withProperties("title", "Actions");
     private Button addNew = toolButton(FontAwesome.MAP_MARKER);
@@ -72,7 +72,7 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
     FeatureEditor editor;
     
     @Autowired
-    AppService userService;
+    AppService service;
     
     private static boolean AUTOLOGIN_FOR_DEVELOPMENT = true;
     private UserGroup group;
@@ -83,25 +83,25 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
     
     @Override
     protected void init(VaadinRequest request) {
-        if (AUTOLOGIN_FOR_DEVELOPMENT && userService.getPerson() == null) {
-            Person person = groupRepository.getPerson("matti@vaadin.com");
+        if (service.isDevMode() && service.getPerson() == null) {
+            Person person = repo.getPerson("matti@vaadin.com");
             if (person == null) {
                 person = new Person();
                 person.setDisplayName("Matti Tahvonen");
                 person.setEmail("matti@vaadin.com");
-                groupRepository.persist(person);
+                repo.persist(person);
             }
-            userService.setPerson(person);
+            service.setPerson(person);
         }
         
-        if (!userService.isAuthtenticated()) {
+        if (!service.isAuthtenticated()) {
             Page.getCurrent().setLocation(request.getContextPath() + "/auth");
             return;
         }
         
-        group = userService.getGroup();
+        group = service.getGroup();
         
-        Page.getCurrent().setTitle("Collamap: " + userService.getGroup().getName());
+        Page.getCurrent().setTitle("Collamap: " + service.getGroup().getName());
         
         table.addGeneratedColumn("Actions", new Table.ColumnGenerator() {
             
@@ -185,18 +185,18 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
     @Override
     public void buttonClick(Button.ClickEvent event) {
         if (event.getButton() == save) {
-            groupRepository.persist(group);
+            repo.persist(group);
             Notification.show("Saved!");
             return;
         }
         if (event.getButton() == logout) {
-            userService.setGroup(null);
-            userService.setPerson(null);
+            service.setGroup(null);
+            service.setPerson(null);
             Page.getCurrent().reload();
             return;
         }
         if (event.getButton() == chooseGroup) {
-            userService.setGroup(null);
+            service.setGroup(null);
             Page.getCurrent().reload();
             return;
         }
