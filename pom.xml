@@ -15,15 +15,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.7</java.version>
-        <version.vaadin>7.2-SNAPSHOT</version.vaadin>
-        <vaadin.plugin.version>7.1.11</vaadin.plugin.version>
+        <version.vaadin>7.3.2</version.vaadin>
+        <vaadin.plugin.version>7.3.2</vaadin.plugin.version>
+        <geotools.version>10.2</geotools.version>
     </properties>
-
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.0.0.RC4</version>
+        <version>1.0.0.RELEASE</version>
     </parent>
 
     <dependencies>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>org.vaadin.spring</groupId>
             <artifactId>spring-boot-vaadin</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>0.0.2.1</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -60,6 +60,16 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-server</artifactId>
             <version>${version.vaadin}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.vaadin.external.google</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>vaadin-theme-compiler</artifactId>
+                    <groupId>com.vaadin</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -68,14 +78,14 @@
 
         <dependency>
             <groupId>org.vaadin.addon</groupId>
-            <artifactId>v-leaflet</artifactId>
-            <version>0.5.5-SNAPSHOT</version>
+            <artifactId>v-leaflet-draw</artifactId>
+            <version>0.6.0-SNAPSHOT</version>
         </dependency>
                 
         <dependency>
             <groupId>org.peimari</groupId>
             <artifactId>maddon</artifactId>
-            <version>1.3-SNAPSHOT</version>
+            <version>1.16-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -97,6 +107,40 @@
             <version>3.1</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-shapefile</artifactId>
+            <version>10.2</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-opengis</artifactId>
+            <version>10.2</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-api</artifactId>
+            <version>10.2</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-main</artifactId>
+            <version>10.2</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-epsg-hsql</artifactId>
+            <version>10.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -109,8 +153,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             
@@ -131,8 +175,8 @@
                     <!-- Remove draftCompile when project is ready -->
                     <draftCompile>true</draftCompile>
                     <persistentunitcachedir>${project.build.directory}/gwtdirt</persistentunitcachedir>
-                    <compileReport>true</compileReport>
-                    <style>OBF</style>
+                    <compileReport>false</compileReport>
+                    <style>PRETTY</style>
                     <strict>true</strict>
                     <!-- Symbol maps etc, not needed in vaadin app, just target them outside war -->
                     <deploy>${project.build.directory}/gwt-deploy</deploy>

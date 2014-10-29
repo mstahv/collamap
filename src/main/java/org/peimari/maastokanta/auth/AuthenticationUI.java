@@ -5,6 +5,7 @@
  */
 package org.peimari.maastokanta.auth;
 
+import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.UI;
 import org.peimari.maastokanta.backend.AppService;
@@ -18,6 +19,7 @@ import org.vaadin.spring.VaadinUI;
  * @author mstahv
  */
 @VaadinUI(path = "/auth")
+@Theme("valo")
 public class AuthenticationUI extends UI {
 
     @Autowired

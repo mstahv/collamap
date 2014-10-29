@@ -4,12 +4,14 @@ import com.vividsolutions.jts.geom.LinearRing;
 
 public class AreaFeature extends SpatialFeature {
 
-	public LinearRing getArea() {
-		return (LinearRing) getGeom();
-	}
+    static final long serialVersionUID = 1L;
 
-	public void setArea(LinearRing route) {
-		setGeom(route);
-	}
+    public LinearRing getArea() {
+        return (LinearRing) getGeom();
+    }
+
+    public void setArea(LinearRing route) {
+        setGeom(route);
+    }
 
 }

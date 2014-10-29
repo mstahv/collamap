@@ -1,14 +1,22 @@
 package org.peimari.maastokanta;
 
+import com.vaadin.server.Page;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.DateField;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.themes.ValoTheme;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
+import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.beanutils.BeanUtils;
 import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.AreaFeature;
@@ -17,23 +25,26 @@ import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.Style;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
 import org.vaadin.addon.leaflet.util.LineStringField;
 import org.vaadin.addon.leaflet.util.LinearRingField;
 import org.vaadin.addon.leaflet.util.PointField;
 import org.vaadin.maddon.BeanBinder;
+import org.vaadin.maddon.button.MButton;
 import org.vaadin.maddon.button.PrimaryButton;
+import org.vaadin.maddon.components.DisclosurePanel;
 import org.vaadin.maddon.fields.CaptionGenerator;
 import org.vaadin.maddon.fields.MTextArea;
 import org.vaadin.maddon.fields.MTextField;
 import org.vaadin.maddon.fields.TypedSelect;
 import org.vaadin.maddon.layouts.MHorizontalLayout;
 import org.vaadin.maddon.layouts.MVerticalLayout;
-import org.vaadin.spring.UIScope;
 import org.vaadin.spring.VaadinComponent;
 
-@UIScope
+@Scope(value = "prototype", proxyMode = ScopedProxyMode.NO)
 @VaadinComponent
 public class FeatureEditor extends Window implements ClickListener {
 
@@ -43,12 +54,17 @@ public class FeatureEditor extends Window implements ClickListener {
     Repository groups;
 
     private SpatialFeature feature;
+    private SpatialFeature originalState;
 
     private Button save = new PrimaryButton("Save", this);
     private Button cancel = new Button("Cancel", this);
+    private Button simplyfy = new MButton("Simplify geometry", this).withStyleName(ValoTheme.BUTTON_LINK);
 
-    private TextField title = new MTextField("Title");
+    private TextField title = new MTextField("Title").withFullWidth();
     private TextArea description = new MTextArea("Description");
+    private TextField contact = new MTextField("Contact").withFullWidth();
+    private TextArea privateDescription = new MTextArea("Private Description");
+    private DateField validUntil = new DateField("Valid until");
     /* Used for EventWithPoint, field used for bean binding */
     @SuppressWarnings("unused")
     private PointField location;
@@ -57,12 +73,18 @@ public class FeatureEditor extends Window implements ClickListener {
     private LineStringField line;
     @SuppressWarnings("unused")
     private LinearRingField area;
-    private AbstractJTSField<?> geometryField;
+    private AbstractJTSField<? extends Geometry> geometryField;
 
     private TypedSelect<Style> style = new TypedSelect<>("Style");
 
-    void init(SpatialFeature spatialFeature) {
+    public FeatureEditor init(SpatialFeature spatialFeature) {
         this.feature = spatialFeature;
+        try {
+            this.originalState = (SpatialFeature) BeanUtils.cloneBean(feature);
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException ex) {
+            Logger.getLogger(FeatureEditor.class.getName()).
+                    log(Level.SEVERE, null, ex);
+        }
 
         style.setCaptionGenerator(new CaptionGenerator<Style>() {
             @Override
@@ -82,18 +104,28 @@ public class FeatureEditor extends Window implements ClickListener {
         }
 
         /* Configure the sub window editing the pojo */
-        setCaption("Edit event");
+        setCaption("Edit feature");
         setHeight("80%");
         setWidth("80%");
         setModal(true);
         setClosable(false); // only via save/cancel
 
         /* Build layout */
-        HorizontalLayout content = new HorizontalLayout(
-                new MVerticalLayout(title, description, style,
-                        new MHorizontalLayout(save, cancel)), geometryField);
-        content.setSizeFull();
-        setContent(content);
+        setContent(new MHorizontalLayout(
+                new MVerticalLayout(title, description,
+                        style,
+                        new DisclosurePanel("Private details",
+                                validUntil,
+                                contact,
+                                privateDescription
+                        ),
+                        new MHorizontalLayout(save, cancel)
+                ).withMargin(false),
+                new MVerticalLayout(
+                        geometryField,
+                        simplyfy
+                ).withMargin(false)
+        ).withFullWidth().withMargin(true).withSpacing(true));
 
         /* Bind data to fields */
         BeanBinder.bind(feature, this);
@@ -101,23 +133,42 @@ public class FeatureEditor extends Window implements ClickListener {
         if (feature instanceof PointFeature) {
             geometryField.getMap().setZoomLevel(DEFAULT_ZOOM_FOR_POINTS);
         }
+        geometryField.setHeight(
+                (int) (Page.getCurrent().getBrowserWindowHeight() * 0.7),
+                Unit.PIXELS);
 
         // Show editor
         if (getParent() == null) {
             UI.getCurrent().addWindow(this);
+            addCloseListener((Window.CloseListener) UI.getCurrent());
         }
+        return this;
     }
     private static final int DEFAULT_ZOOM_FOR_POINTS = 15;
 
     @Override
     public void buttonClick(ClickEvent event) {
+        if (event.getButton() == simplyfy) {
+            if (feature instanceof AreaFeature) {
+                Geometry geometry = geometryField.getValue();
+                LinearRing simplified = (LinearRing) DouglasPeuckerSimplifier.
+                        simplify(geometry, 0.00005);
+                area.setValue(simplified);
+            }
+            return;
+        }
         if (event.getButton() == save) {
-            // TODO commit!? Need Buffering!?, or remove totally??
-            
-            
+            // NOP, not buffering in this app
         } else {
-            // TODO refresh!? Need Buffering!?
-            
+            // Cancel clicked
+            try {
+                // Reset the original state
+                BeanUtils.copyProperties(feature, originalState);
+            } catch (IllegalAccessException | InvocationTargetException ex) {
+                Logger.getLogger(FeatureEditor.class.getName()).
+                        log(Level.SEVERE, null, ex);
+            }
+
         }
         close();
     }

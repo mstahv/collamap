@@ -8,17 +8,27 @@ import javax.validation.constraints.Size;
 
 public class SpatialFeature extends AbstractEntity {
 
+    static final long serialVersionUID = 1L;
+
     private Geometry geom;
 
     private Style style;
 
-    private Collection<Tag> tags = new HashSet<Tag>();
+    private Collection<Tag> tags = new HashSet<>();
 
     @Size(max = 255)
     private String title;
 
     @Size(max = 36000)
     private String description;
+    
+    @Size(max = 36000)
+    private String privateDescription;
+
+    @Size(max = 600)
+    private String contact;
+    
+    private Date validUntil;
 
     private Date lastModified;
 
@@ -32,6 +42,30 @@ public class SpatialFeature extends AbstractEntity {
         this.description = description;
         prepersist();
 
+    }
+
+    public String getPrivateDescription() {
+        return privateDescription;
+    }
+
+    public void setPrivateDescription(String privateDescription) {
+        this.privateDescription = privateDescription;
+    }
+
+    public String getContact() {
+        return contact;
+    }
+
+    public void setContact(String contact) {
+        this.contact = contact;
+    }
+
+    public Date getValidUntil() {
+        return validUntil;
+    }
+
+    public void setValidUntil(Date validUntil) {
+        this.validUntil = validUntil;
     }
 
     public Date getLastModified() {
@@ -58,11 +92,6 @@ public class SpatialFeature extends AbstractEntity {
 
     protected void setVersion(Long version) {
         this.version = version;
-    }
-
-    @Override
-    public String toString() {
-        return "Feature[title:" + title + "]";
     }
 
     private void prepersist() {
@@ -97,6 +126,11 @@ public class SpatialFeature extends AbstractEntity {
 
     public void setTags(Collection<Tag> tags) {
         this.tags = tags;
+    }
+
+    @Override
+    public String toString() {
+        return "SpatialFeature{" + "geom=" + geom.getGeometryType() + ", style=" + style + ", tags=" + tags + ", title=" + title + ", description=" + description + ", privateDescription=" + privateDescription + ", contact=" + contact + ", validUntil=" + validUntil + ", lastModified=" + lastModified + ", version=" + version + '}';
     }
 
 }

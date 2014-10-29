@@ -5,22 +5,32 @@
  */
 package org.peimari.maastokanta;
 
+import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Widgetset;
+import com.vaadin.server.FileDownloader;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.server.Resource;
+import com.vaadin.server.StreamResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.themes.ValoTheme;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import java.io.ByteArrayInputStream;
 import java.util.List;
+import org.opengis.feature.Feature;
+import org.opengis.feature.Property;
 import org.peimari.maastokanta.backend.AppService;
+import org.peimari.maastokanta.backend.KtUtil;
 import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.AreaFeature;
 import org.peimari.maastokanta.domain.LineFeature;
@@ -32,12 +42,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.vaadin.addon.leaflet.AbstractLeafletLayer;
 import org.vaadin.addon.leaflet.LMap;
+import org.vaadin.addon.leaflet.LOpenStreetMapLayer;
+import org.vaadin.addon.leaflet.LPolygon;
 import org.vaadin.addon.leaflet.LTileLayer;
 import org.vaadin.addon.leaflet.LeafletClickEvent;
 import org.vaadin.addon.leaflet.LeafletClickListener;
 import org.vaadin.addon.leaflet.util.JTSUtil;
+import org.vaadin.maddon.button.ConfirmButton;
 import org.vaadin.maddon.button.MButton;
+import org.vaadin.maddon.button.PrimaryButton;
 import org.vaadin.maddon.fields.MTable;
+import org.vaadin.maddon.fields.MTextField;
 import org.vaadin.maddon.layouts.MHorizontalLayout;
 import org.vaadin.maddon.layouts.MVerticalLayout;
 import org.vaadin.spring.VaadinUI;
@@ -49,38 +64,62 @@ import org.vaadin.spring.VaadinUI;
 @VaadinUI
 @EnableAutoConfiguration
 @Widgetset("org.peimari.maastokanta.AppWidgetSet")
-public class MainUI extends UI implements Button.ClickListener, Window.CloseListener {
-    
+@Theme("valo")
+public class MainUI extends UI implements Button.ClickListener,
+        Window.CloseListener {
+
     @Autowired
     Repository repo;
-    
-    private MTable<SpatialFeature> table = new MTable().withFullWidth().withProperties("title", "Actions");
-    private Button addNew = toolButton(FontAwesome.MAP_MARKER);
-    private Button addNewWithRoute = toolButton(FontAwesome.MINUS);
-    private Button addNewWithArea = toolButton(FontAwesome.SQUARE);
-    private Button save = toolButton(FontAwesome.FLOPPY_O);
+
+    private MTable<SpatialFeature> table = new MTable().withFullWidth().
+            withProperties("title", "Actions").withFullHeight().withFullWidth().
+            expand("title");
+    private Button addNew = toolButton(FontAwesome.MAP_MARKER).withDescription(
+            "Add marker");
+    private Button addNewWithRoute = toolButton(FontAwesome.MINUS).
+            withDescription("Add path");
+    private Button addNewWithArea = toolButton(FontAwesome.SQUARE).
+            withDescription("Add area");
+    private Button addFromAvailableGeometries = toolButton(FontAwesome.SQUARE_O).
+            withCaption("...").withDescription("Add area from catalog");
+    private Button addWithKiinteistotunnus = toolButton(FontAwesome.SEARCH_PLUS).
+            withDescription("Add with kiinteistötunnus");
+    private Button editStyles = toolButton(FontAwesome.ELLIPSIS_H).
+            withDescription("Edit styles");
+    private Button save = toolButton(FontAwesome.FLOPPY_O).withDescription(
+            "Save to server");
+    private Button exportCsv = toolButton(FontAwesome.DOWNLOAD).withDescription(
+            "Export");
+//    private Button importCsv = toolButton(FontAwesome.UPLOAD).withDescription(
+//            "Import");
     private Component spacer = new Label("");
+    private MTextField filter = new MTextField().withInputPrompt("filter...").
+            withFullWidth();
     private Button logout = new MButton("logout", this);
     private Button chooseGroup = new MButton("Other group...", this);
     private LMap map = new LMap();
-    private LTileLayer osmTiles = new LTileLayer(
-            "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    private LOpenStreetMapLayer osmTiles = new LOpenStreetMapLayer();
     LTileLayer peruskartta = new LTileLayer(
             "http://v3.tahvonen.fi/mvm71/tiles/peruskartta/{z}/{x}/{y}.png");
-    
+
     @Autowired
     FeatureEditor editor;
-    
+
+    @Autowired
+    GeometryPicker picker;
+
     @Autowired
     AppService service;
-    
-    private static boolean AUTOLOGIN_FOR_DEVELOPMENT = true;
+
+    @Autowired
+    StyleEditor styleEditor;
+
     private UserGroup group;
-    
+
     private final MButton toolButton(Resource icon) {
-        return new MButton(icon,this);
+        return new MButton(icon, this).withStyleName(ValoTheme.BUTTON_ICON_ONLY);
     }
-    
+
     @Override
     protected void init(VaadinRequest request) {
         if (service.isDevMode() && service.getPerson() == null) {
@@ -93,100 +132,122 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
             }
             service.setPerson(person);
         }
-        
+
         if (!service.isAuthtenticated()) {
             Page.getCurrent().setLocation(request.getContextPath() + "/auth");
             return;
         }
-        
+
         group = service.getGroup();
-        
+
         Page.getCurrent().setTitle("Collamap: " + service.getGroup().getName());
-        
-        table.addGeneratedColumn("Actions", new Table.ColumnGenerator() {
-            
-            @Override
-            public Object generateCell(Table source, final Object se,
-                    Object columnId) {
-                final SpatialFeature feature = (SpatialFeature) se;
-                Button edit = new Button("Edit", new Button.ClickListener() {
-                    
-                    @Override
-                    public void buttonClick(Button.ClickEvent event) {
-                        editor.init(feature);
-                    }
-                });
-                
-                Button delete = new Button("Delete", new Button.ClickListener() {
-                    
-                    @Override
-                    public void buttonClick(Button.ClickEvent event) {
+
+        table.addGeneratedColumn("Actions", (source, se, columnId) -> {
+            final SpatialFeature feature = (SpatialFeature) se;
+            Button edit = new MButton(FontAwesome.EDIT, e -> editor.
+                    init(feature));
+
+            Button delete = new ConfirmButton(FontAwesome.TRASH_O,
+                    "Are you really sure about this desctrutive operation??",
+                    e -> {
                         group.getFeatures().remove(feature);
-                        loadEvents();
-                    }
-                });
-                return new MHorizontalLayout(edit, delete);
-            }
+                        loadEvents(filter.getValue());
+                    });
+            edit.setStyleName(ValoTheme.BUTTON_SMALL);
+            edit.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+            delete.setStyleName(ValoTheme.BUTTON_SMALL);
+            delete.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+            return new MHorizontalLayout(edit, delete).withSpacing(false);
         });
-        
-        loadEvents();
-        
-        osmTiles.setAttributionString("© OpenStreetMap Contributors");
-        
+
+        loadEvents(null);
+
         peruskartta.setAttributionString("Peruskartta: ©Maanmittauslaitos");
         peruskartta.setMaxZoom(18);
         peruskartta.setDetectRetina(true);
-        
-        HorizontalLayout actions = new MHorizontalLayout(addNew, addNewWithRoute, addNewWithArea, save, spacer, chooseGroup, logout).expand(spacer).withFullWidth();
-        VerticalLayout layout = new MVerticalLayout(actions, map, table).expand(map, table);
-        table.setSizeFull();
+
+        HorizontalLayout actions = new MHorizontalLayout(addNew, addNewWithRoute,
+                addNewWithArea, addFromAvailableGeometries,
+                addWithKiinteistotunnus, editStyles, exportCsv, save,
+                spacer,
+                chooseGroup, logout).expand(spacer).withFullWidth();
+        final MHorizontalLayout maincontent = new MHorizontalLayout(
+                map,
+                new MVerticalLayout(filter).expand(table)
+                .withMargin(false).withWidth("300px")
+        ).withFullWidth().withFullHeight().expand(map);
+        VerticalLayout layout = new MVerticalLayout(actions).
+                expand(maincontent).withFullHeight().withFullWidth();
         layout.setSizeFull();
         setContent(layout);
         
-        editor.addCloseListener(this);
-        
+        filter.addTextChangeListener(e -> loadEvents(e.getText()));
+
+        FileDownloader fileDownloader = new FileDownloader(new StreamResource(
+                () -> {
+                    return new ByteArrayInputStream(service.writeCsv().
+                            getBytes());
+                }, "export.csv"));
+        fileDownloader.extend(exportCsv);
+
     }
-    
-    private void loadEvents() {
-        final List<SpatialFeature> events = group.getFeatures();
-        table.setBeans(events);
+
+    private void loadEvents(String filter) {
+        final List<SpatialFeature> features;
+        if (filter != null && !filter.isEmpty()) {
+            features = group.getFeatures(filter);
+        } else {
+            features = group.getFeatures();
+        }
+
+        table.setBeans(features);
 
         /* ... and map */
         map.removeAllComponents();
-        map.addBaseLayer(peruskartta, "PK");
-        for (final SpatialFeature spatialEvent : events) {
+        map.addLayer(peruskartta);
+        // map.addBaseLayer(osmTiles, "OSM");
+        for (final SpatialFeature spatialEvent : features) {
             if (spatialEvent.getGeom() != null) {
                 /* 
                  * JTSUtil wil make LMarker for point event, 
                  * LPolyline for events with route 
                  */
-                AbstractLeafletLayer layer = (AbstractLeafletLayer) JTSUtil.toLayer(spatialEvent.getGeom());
+                AbstractLeafletLayer layer = (AbstractLeafletLayer) JTSUtil.
+                        toLayer(spatialEvent.getGeom());
 
                 /* Add click listener to open event editor */
                 layer.addClickListener(new LeafletClickListener() {
-                    
+
                     @Override
                     public void onClick(LeafletClickEvent e) {
                         editor.init(spatialEvent);
                     }
                 });
+                if (spatialEvent.getStyle() != null && spatialEvent.getStyle().
+                        getColor() != null && (layer instanceof LPolygon)) {
+                    LPolygon lPolygon = (LPolygon) layer;
+                    lPolygon.setColor(spatialEvent.getStyle().getColor());
+                }
                 map.addLayer(layer);
             }
         }
-        if (events.isEmpty()) {
-            map.setCenter(61, 22);
-            map.setZoomLevel(16);
+        if (features.isEmpty()) {
+            map.setCenter(60.4568759, 22.6870261);
+            map.setZoomLevel(13);
         } else {
             map.zoomToContent();
         }
-        
+
     }
-    
+
     @Override
     public void buttonClick(Button.ClickEvent event) {
         if (event.getButton() == save) {
             repo.persist(group);
             Notification.show("Saved!");
+            return;
+        }
+        if (event.getButton() == exportCsv) {
             return;
         }
         if (event.getButton() == logout) {
@@ -200,7 +261,44 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
             Page.getCurrent().reload();
             return;
         }
-        
+        if (event.getButton() == addWithKiinteistotunnus) {
+            // TODO can haz prompt!?!
+            Window window = new Window("Find with Kiinteistötunnus");
+            MTextField tunnus = new MTextField().withInputPrompt(
+                    "577-XXX-XXXX-XXXX");
+            Button add = new PrimaryButton("Add", e -> {
+                List<Feature> features = service.findByKiinteistotunnus(tunnus.getValue());
+                if (!features.isEmpty()) {
+                    int i = 0;
+                    for (Feature f : features) {
+                        i++;
+                        String postfix = features.size() == 1 ? "" : "-"+i;
+                        newFrom(f, postfix);
+                    }
+                    if(features.size() > 1) {
+                        filter.setValue(KtUtil.ktToLongForm(tunnus.getValue()));
+                        Notification.show("Found several shapes, filtered and editing one of them.");
+                    }
+                    window.close();
+                } else {
+                    Notification.show("Not found!",
+                            Notification.Type.WARNING_MESSAGE);
+                }
+            });
+            window.setContent(new MVerticalLayout(tunnus, add));
+            window.setModal(true);
+            addWindow(window);
+            return;
+        }
+
+        if (event.getButton() == addFromAvailableGeometries) {
+            picker.activate();
+            return;
+        } else if (event.getButton() == editStyles) {
+            styleEditor.activate();
+            return;
+        }
+
         SpatialFeature newFeature;
         if (event.getButton() == addNew) {
             newFeature = new PointFeature();
@@ -211,15 +309,37 @@ public class MainUI extends UI implements Button.ClickListener, Window.CloseList
         } else {
             throw new IllegalArgumentException();
         }
-        group.getFeatures().add(newFeature);
-        editor.init(newFeature);
-        editor.setCenterAndZoom(map.getCenter(), map.getZoomLevel());
+        editFeature(newFeature);
     }
-    
+
+    private void editFeature(SpatialFeature newFeature) {
+        group.getFeatures().add(newFeature);
+        FeatureEditor e = editor.init(newFeature);
+        e.setCenterAndZoom(map.getCenter(), map.getZoomLevel());
+    }
+
     @Override
     public void windowClose(Window.CloseEvent e) {
         // refresh table after edit
-        loadEvents();
+        loadEvents(filter.getValue());
     }
-    
+
+    void newFrom(Feature feature, String postfix) {
+        Geometry geometry = service.getGeometryInGPSCoordinates(feature);
+        // TODO support multipolygons in V-Leaflet
+        if (geometry instanceof MultiPolygon) {
+            MultiPolygon multiPolygon = (MultiPolygon) geometry;
+            AreaFeature areaFeature = new AreaFeature();
+            final Polygon polygon = (Polygon) multiPolygon.getGeometryN(0);
+            areaFeature.setGeom(polygon.getExteriorRing());
+            Property property = feature.getProperty("TEKSTI");
+            if (property != null) {
+                areaFeature.setTitle(property.getValue().toString() + postfix);
+            }
+            editFeature(areaFeature);
+        } else {
+            throw new IllegalArgumentException("Unknown geometry type");
+        }
+    }
+
 }

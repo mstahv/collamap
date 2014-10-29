@@ -1,13 +1,15 @@
 package org.peimari.maastokanta.domain;
 
 public class Style extends AbstractEntity {
+    
+    static final long serialVersionUID = 1L;
 
     private String name;
     private String color;
 
     public Style() {
     }
-    
+
     Style(String name, String color) {
         this.name = name;
         this.color = color;

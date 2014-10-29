@@ -13,8 +13,9 @@ import org.vaadin.addon.leaflet.util.AbstractJTSField;
 @EnableAutoConfiguration
 @EnableConfigurationProperties
 public class Application {
-
+    
     public static void main(String[] args) {
+        System.setProperty("org.geotools.referencing.forceXY", "true");
         SpringApplication.run(Application.class, args);
     }
 
