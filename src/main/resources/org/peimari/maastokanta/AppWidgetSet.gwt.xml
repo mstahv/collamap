@@ -28,6 +28,9 @@
      information and instructions.
     -->
     <!-- <set-configuration-property name="devModeRedirectEnabled" value="true" /> -->
+    
+    <!-- WS Compiler: manually edited -->
+
 
     <inherits name="org.vaadin.addon.leaflet.draw.DrawWidgetset" />
 </module>

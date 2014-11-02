@@ -40,7 +40,8 @@ class GroupsView extends MVerticalLayout {
 
     Header newGroupheader = new Header("Create new:").setHeaderLevel(3);
 
-    Header joinHeader = new Header("Request to join existing:").setHeaderLevel(3);
+    Header joinHeader = new Header("Request to join existing:").
+            setHeaderLevel(3);
 
     TextField newName = new MTextField();
 
@@ -61,7 +62,7 @@ class GroupsView extends MVerticalLayout {
 
     protected void userGroup(UserGroup group) {
         service.setGroup(group);
-        Page.getCurrent().setLocation("/");
+        Page.getCurrent().setLocation("/admin");
     }
 
     @Override
@@ -69,8 +70,10 @@ class GroupsView extends MVerticalLayout {
         super.attach();
         Table existing = new Table();
         existing.addContainerProperty("name", String.class, "");
-        for (Entry<String, String> e : service.getPerson().getIdToGroup().entrySet()) {
-            existing.addItem(e.getKey()).getItemProperty("name").setValue(e.getValue());
+        for (Entry<String, String> e : service.getPerson().getIdToGroup().
+                entrySet()) {
+            existing.addItem(e.getKey()).getItemProperty("name").setValue(e.
+                    getValue());
         }
         existing.setSelectable(true);
         existing.setImmediate(true);
@@ -79,9 +82,11 @@ class GroupsView extends MVerticalLayout {
             public void valueChange(Property.ValueChangeEvent event) {
                 Object value = event.getProperty().getValue();
                 if (value != null) {
-                    UserGroup group = groupRepository.getGroup((String) event.getProperty().getValue());
+                    UserGroup group = groupRepository.getGroup((String) event.
+                            getProperty().getValue());
                     service.setGroup(group);
-                    Page.getCurrent().setLocation("/");
+                    Page.getCurrent().setLocation(Page.getCurrent().
+                            getLocation().toString().replace("/auth", "/admin"));
                 }
             }
         });

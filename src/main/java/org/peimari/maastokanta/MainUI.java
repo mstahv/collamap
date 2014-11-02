@@ -55,13 +55,13 @@ import org.vaadin.maddon.fields.MTable;
 import org.vaadin.maddon.fields.MTextField;
 import org.vaadin.maddon.layouts.MHorizontalLayout;
 import org.vaadin.maddon.layouts.MVerticalLayout;
-import org.vaadin.spring.VaadinUI;
+import org.vaadin.spring.touchkit.TouchKitUI;
 
 /**
  *
  * @author mattitahvonenitmill
  */
-@VaadinUI
+@TouchKitUI(path="/admin")
 @EnableAutoConfiguration
 @Widgetset("org.peimari.maastokanta.AppWidgetSet")
 @Theme("valo")
@@ -112,7 +112,7 @@ public class MainUI extends UI implements Button.ClickListener,
     AppService service;
 
     @Autowired
-    StyleEditor styleEditor;
+    PropertiesEditor styleEditor;
 
     private UserGroup group;
 

@@ -12,13 +12,13 @@ import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.Person;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.spring.VaadinUI;
+import org.vaadin.spring.touchkit.TouchKitUI;
 
 /**
  *
  * @author mstahv
  */
-@VaadinUI(path = "/auth")
+@TouchKitUI(path = "/auth")
 @Theme("valo")
 public class AuthenticationUI extends UI {
 

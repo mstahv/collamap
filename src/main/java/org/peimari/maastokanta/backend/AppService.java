@@ -18,9 +18,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.apache.commons.beanutils.DynaClass;
-import org.apache.commons.beanutils.DynaProperty;
-import org.apache.commons.beanutils.LazyDynaClass;
 import org.apache.commons.beanutils.WrapDynaBean;
 import org.apache.commons.beanutils.WrapDynaClass;
 import org.apache.commons.csv.CSVFormat;
@@ -113,7 +110,8 @@ public class AppService {
         }
         try {
             Map map = new HashMap();
-            File file = new File(env.getProperty("shapefile"));
+
+            File file = new File(env.getProperty("fileroot") + "/shp/availableshapes.shp");
             map.put("url", file.toURL());
 
             ShapefileDataStore dataStore = new ShapefileDataStore(file.toURL());
@@ -164,7 +162,7 @@ public class AppService {
         try {
 
             Map map = new HashMap();
-            File file = new File(env.getProperty("shapefile"));
+            File file = new File(env.getProperty("fileroot") + "/shp/availableshapes.shp" );
             map.put("url", file.toURL());
 
             ShapefileDataStore dataStore = new ShapefileDataStore(file.toURL());

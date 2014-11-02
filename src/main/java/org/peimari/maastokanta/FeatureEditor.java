@@ -42,9 +42,10 @@ import org.vaadin.maddon.fields.MTextField;
 import org.vaadin.maddon.fields.TypedSelect;
 import org.vaadin.maddon.layouts.MHorizontalLayout;
 import org.vaadin.maddon.layouts.MVerticalLayout;
+import org.vaadin.spring.UIScope;
 import org.vaadin.spring.VaadinComponent;
 
-@Scope(value = "prototype", proxyMode = ScopedProxyMode.NO)
+@UIScope
 @VaadinComponent
 public class FeatureEditor extends Window implements ClickListener {
 

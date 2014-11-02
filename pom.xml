@@ -6,6 +6,8 @@
     <groupId>org.peimari</groupId>
     <artifactId>collamap</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    
+    <packaging>war</packaging>
 
     <name>CollaMap</name>
     <description>An example project that can be used to collaboratively share area/point/path information, e.g. hunting areas for a club. Built with SpringBoot, Hibernate Spatial, Vaadin and V-Leaflet.</description>
@@ -14,7 +16,6 @@
         <start-class>org.peimari.maastokanta.Application</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.7</java.version>
         <version.vaadin>7.3.2</version.vaadin>
         <vaadin.plugin.version>7.3.2</vaadin.plugin.version>
         <geotools.version>10.2</geotools.version>
@@ -23,7 +24,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.0.0.RELEASE</version>
+        <version>1.2.0.BUILD-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -42,14 +43,56 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.vaadin.spring</groupId>
             <artifactId>spring-boot-vaadin</artifactId>
             <version>0.0.2.1</version>
         </dependency>
         <dependency>
+            <groupId>org.vaadin.spring</groupId>
+            <artifactId>spring-vaadin-touchkit</artifactId>
+            <version>0.0.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin.addon</groupId>
+            <artifactId>vaadin-touchkit-agpl</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-themes</artifactId>
             <version>${version.vaadin}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-client</artifactId>
+            <version>${version.vaadin}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-client-compiler</artifactId>
+            <version>${version.vaadin}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -173,10 +216,10 @@
                     </hostedWebapp>
                     <noServer>true</noServer>
                     <!-- Remove draftCompile when project is ready -->
-                    <draftCompile>true</draftCompile>
+                    <draftCompile>false</draftCompile>
                     <persistentunitcachedir>${project.build.directory}/gwtdirt</persistentunitcachedir>
                     <compileReport>false</compileReport>
-                    <style>PRETTY</style>
+                    <style>OBF</style>
                     <strict>true</strict>
                     <!-- Symbol maps etc, not needed in vaadin app, just target them outside war -->
                     <deploy>${project.build.directory}/gwt-deploy</deploy>
@@ -222,12 +265,24 @@
                     </execution>
                 </executions>
             </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <packagingExcludes>WEB-INF/lib/tomcat-*.jar</packagingExcludes>
+                </configuration>
+            </plugin>
         </plugins>
-        
         
     </build>
 
     <repositories>
+        <repository>
+            <id>vaadin-addons</id>
+            <url>http://maven.vaadin.com/vaadin-addons</url>
+        </repository>
         <repository>
             <id>spring-snapshots</id>
             <name>Spring Snapshots</name>

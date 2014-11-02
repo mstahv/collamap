@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.5.1//EN" "http://google-web-toolkit.googlecode.com/svn/tags/2.5.1/distro-source/core/src/gwt-module.dtd">
+<module>
+    <!--
+    This file is automatically updated based on new dependencies by the
+    goal "vaadin:update-widgetset".
+    -->
+        
+    <!-- WS Compiler: manually edited -->
+
+    <inherits name="com.vaadin.addon.touchkit.gwt.TouchKitWidgetSet" />
+
+    <inherits name="org.vaadin.addon.leaflet.Widgetset" />
+    
+    <generate-with class="org.peimari.maastokanta.gwt.OptimizedConnectorBundleLoaderFactory">
+        <when-type-assignable class="com.vaadin.client.metadata.ConnectorBundleLoader" />
+    </generate-with>
+    
+</module>
