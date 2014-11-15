@@ -192,7 +192,7 @@
 
     <build>
         <plugins>
-<!--            <plugin>
+            <!--            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>-->
@@ -275,8 +275,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.5</version>
                 <configuration>
-                    <packagingExcludes>WEB-INF/lib/tomcat-*.jar</packagingExcludes>
-                    <packagingExcludes>WEB-INF/lib-provided/*.jar</packagingExcludes>
+                    <packagingExcludes>WEB-INF/lib/tomcat-*.jar,WEB-INF/lib/jetty-*.jar,WEB-INF/lib-provided/*.jar</packagingExcludes>
                 </configuration>
             </plugin>
         </plugins>
