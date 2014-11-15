@@ -331,7 +331,7 @@ public class MainUI extends UI implements Button.ClickListener,
             MultiPolygon multiPolygon = (MultiPolygon) geometry;
             AreaFeature areaFeature = new AreaFeature();
             final Polygon polygon = (Polygon) multiPolygon.getGeometryN(0);
-            areaFeature.setGeom(polygon.getExteriorRing());
+            areaFeature.setGeom(polygon);
             Property property = feature.getProperty("TEKSTI");
             if (property != null) {
                 areaFeature.setTitle(property.getValue().toString() + postfix);

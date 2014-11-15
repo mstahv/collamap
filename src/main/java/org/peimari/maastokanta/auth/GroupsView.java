@@ -44,6 +44,8 @@ class GroupsView extends MVerticalLayout {
             setHeaderLevel(3);
 
     TextField newName = new MTextField();
+    
+    TextField forceOpenId = new MTextField();
 
     Button createNew = new MButton("Create", new Button.ClickListener() {
 
@@ -62,7 +64,8 @@ class GroupsView extends MVerticalLayout {
 
     protected void userGroup(UserGroup group) {
         service.setGroup(group);
-        Page.getCurrent().setLocation("/admin");
+        Page.getCurrent().setLocation(Page.getCurrent().
+                getLocation().toString().replace("/auth", "/admin"));
     }
 
     @Override
@@ -101,9 +104,20 @@ class GroupsView extends MVerticalLayout {
 //                Notification.show("TODO make join request");
 //            }
 //        });
+        
+        Button forceOpen = new Button("Force open with id");
+        forceOpen.addClickListener(e->{
+            UserGroup group = groupRepository.getGroup(forceOpenId.getValue());
+            if(group != null) {
+                userGroup(group);
+            }
+        });
+        
         addComponents(header, new MVerticalLayout(existing),
                 new MVerticalLayout(joinHeader, existing, newGroupheader),
-                new MVerticalLayout(newName, createNew));
+                new MVerticalLayout(newName, createNew),
+                new MVerticalLayout(forceOpenId,forceOpen).withCaption("Force open with id (admin only)")
+        );
     }
 
 }

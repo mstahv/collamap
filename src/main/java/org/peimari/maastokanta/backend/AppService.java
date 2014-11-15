@@ -6,6 +6,7 @@
 package org.peimari.maastokanta.backend;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -35,6 +36,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import org.peimari.maastokanta.domain.AreaFeature;
 import org.peimari.maastokanta.domain.Person;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.UserGroup;
@@ -46,6 +48,19 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope(value = "session")
 public class AppService {
+
+    private static CoordinateReferenceSystem TM35_CRS;
+    private static CoordinateReferenceSystem GPS_CRS;
+
+    static {
+        try {
+            TM35_CRS = CRS.decode("EPSG:3067");
+            GPS_CRS = CRS.decode("EPSG:4326");
+        } catch (FactoryException ex) {
+            Logger.getLogger(AppService.class.getName()).log(Level.SEVERE, null,
+                    ex);
+        }
+    }
 
     @Autowired
     Repository repo;
@@ -84,6 +99,7 @@ public class AppService {
         group.addStyle("Normal", "blue");
         group.addStyle("Important", "red");
         getPerson().addGroup(group.getId(), groupName);
+        group.getEditorEmails().add(person.getEmail());
         repo.saveUsers();
         repo.persist(group);
         return group;
@@ -111,7 +127,8 @@ public class AppService {
         try {
             Map map = new HashMap();
 
-            File file = new File(env.getProperty("fileroot") + "/shp/availableshapes.shp");
+            File file = new File(
+                    env.getProperty("fileroot") + "/shp/availableshapes.shp");
             map.put("url", file.toURL());
 
             ShapefileDataStore dataStore = new ShapefileDataStore(file.toURL());
@@ -162,7 +179,8 @@ public class AppService {
         try {
 
             Map map = new HashMap();
-            File file = new File(env.getProperty("fileroot") + "/shp/availableshapes.shp" );
+            File file = new File(
+                    env.getProperty("fileroot") + "/shp/availableshapes.shp");
             map.put("url", file.toURL());
 
             ShapefileDataStore dataStore = new ShapefileDataStore(file.toURL());
@@ -226,6 +244,22 @@ public class AppService {
 
     public void importCsv() {
 
+    }
+
+    public String calculateSize(AreaFeature areaFeature) {
+        Polygon area = areaFeature.getArea();
+        try {
+            MathTransform transform = CRS.findMathTransform(GPS_CRS, TM35_CRS,
+                    true);
+            Geometry tm35 = JTS.transform(areaFeature.getArea(), transform);
+            double sm = tm35.getArea() / 10000.0;
+            return String.format("%.2f ha", sm);
+        } catch (Exception ex) {
+            Logger.getLogger(AppService.class.getName()).log(Level.SEVERE, null,
+                    ex);
+        }
+
+        return "--";
     }
 
 }

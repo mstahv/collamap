@@ -19,10 +19,12 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.peimari.maastokanta.domain.Person;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
+@Scope("singleton")
 public class Repository {
 
     File root;

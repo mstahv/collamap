@@ -10,9 +10,9 @@ import com.vaadin.addon.touchkit.ui.NavigationManager;
 import com.vaadin.addon.touchkit.ui.NavigationView;
 import com.vaadin.addon.touchkit.ui.VerticalComponentGroup;
 import com.vaadin.annotations.Theme;
+import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
@@ -33,15 +33,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.vaadin.addon.leaflet.AbstractLeafletVector;
 import org.vaadin.addon.leaflet.LCircle;
-import org.vaadin.addon.leaflet.LCircleMarker;
 import org.vaadin.addon.leaflet.LLayerGroup;
 import org.vaadin.addon.leaflet.LMap;
-import org.vaadin.addon.leaflet.LMarker;
 import org.vaadin.addon.leaflet.LTileLayer;
 import org.vaadin.addon.leaflet.LeafletLayer;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.JTSUtil;
-import org.vaadin.maddon.button.MButton;
 import org.vaadin.maddon.fields.MTextField;
 import org.vaadin.spring.touchkit.TouchKitUI;
 
@@ -53,6 +50,7 @@ import org.vaadin.spring.touchkit.TouchKitUI;
 @EnableAutoConfiguration
 @Widgetset("org.peimari.maastokanta.MobileAppWidgetSet")
 @Theme("touchkit")
+@Title("Collamap")
 public class MobileUI extends UI {
 
     @Autowired
@@ -76,9 +74,9 @@ public class MobileUI extends UI {
         initSettingsView();
         mapView.setSizeFull();
         mapView.setContent(map);
-        final NavigationButton settingsButton = new NavigationButton(
-                settingsView);
+        final NavigationButton settingsButton = new NavigationButton();
         settingsButton.setIcon(FontAwesome.NAVICON);
+        settingsButton.addClickListener(e->{navman.navigateTo(settingsView);});
         mapView.setRightComponent(settingsButton);
         navman.setNextComponent(settingsView);
         setContent(navman);
@@ -158,14 +156,16 @@ public class MobileUI extends UI {
 
     private void initMap() {
         map.removeAllComponents();
-        map.addLayer(new LTileLayer(
-                "http://v3.tahvonen.fi/mvm71/tiles/peruskartta/{z}/{x}/{y}.png"));
+        final LTileLayer peruskartta = new LTileLayer(
+                "http://v3.tahvonen.fi/mvm71/tiles/peruskartta/{z}/{x}/{y}.png");
+        peruskartta.setDetectRetina(true);
+        map.addLayer(peruskartta);
         zoomToContent();
     }
 
     private void showPopup(SpatialFeature f) {
-        Notification.show("Special data for " + f.getTitle() + ":" + f.
-                getDescription());
+        Notification.show("Notes for " + f.getTitle() + ":" + f.
+                getDescription(),Notification.Type.WARNING_MESSAGE);
     }
 
     private void initSettingsView() {

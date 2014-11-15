@@ -32,5 +32,5 @@
     <!-- WS Compiler: manually edited -->
 
 
-    <inherits name="org.vaadin.addon.leaflet.draw.DrawWidgetset" />
+    <inherits name="org.vaadin.addon.leaflet.editable.EditableWidgetset" />
 </module>

@@ -1,17 +1,19 @@
 package org.peimari.maastokanta;
 
+import com.vaadin.data.Property;
 import com.vaadin.server.Page;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.DateField;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.ValoTheme;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
@@ -25,12 +27,10 @@ import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.Style;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
+import org.vaadin.addon.leaflet.editable.LineStringField;
+import org.vaadin.addon.leaflet.editable.PolygonField;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
-import org.vaadin.addon.leaflet.util.LineStringField;
-import org.vaadin.addon.leaflet.util.LinearRingField;
 import org.vaadin.addon.leaflet.util.PointField;
 import org.vaadin.maddon.BeanBinder;
 import org.vaadin.maddon.button.MButton;
@@ -73,12 +73,15 @@ public class FeatureEditor extends Window implements ClickListener {
     @SuppressWarnings("unused")
     private LineStringField line;
     @SuppressWarnings("unused")
-    private LinearRingField area;
+    private PolygonField area;
     private AbstractJTSField<? extends Geometry> geometryField;
+    
+    private Label areaSize = new Label("Area");
 
     private TypedSelect<Style> style = new TypedSelect<>("Style");
 
     public FeatureEditor init(SpatialFeature spatialFeature) {
+        
         this.feature = spatialFeature;
         try {
             this.originalState = (SpatialFeature) BeanUtils.cloneBean(feature);
@@ -95,11 +98,19 @@ public class FeatureEditor extends Window implements ClickListener {
         });
         style.setOptions(service.getGroup().getStyles());
 
+        
+        areaSize.setVisible(false);
         /* Choose suitable custom field for geometry */
         if (feature instanceof PointFeature) {
             geometryField = location = new PointField();
         } else if (feature instanceof AreaFeature) {
-            geometryField = area = new LinearRingField();
+            geometryField = area = new PolygonField();
+            areaSize.setVisible(true);
+            areaSize.setValue("--");
+            area.addValueChangeListener(e -> 
+                areaSize.setValue(service.calculateSize((AreaFeature)feature))
+            );
+            
         } else if (feature instanceof LineFeature) {
             geometryField = line = new LineStringField();
         }
@@ -115,6 +126,7 @@ public class FeatureEditor extends Window implements ClickListener {
         setContent(new MHorizontalLayout(
                 new MVerticalLayout(title, description,
                         style,
+                        areaSize,
                         new DisclosurePanel("Private details",
                                 validUntil,
                                 contact,
@@ -152,7 +164,7 @@ public class FeatureEditor extends Window implements ClickListener {
         if (event.getButton() == simplyfy) {
             if (feature instanceof AreaFeature) {
                 Geometry geometry = geometryField.getValue();
-                LinearRing simplified = (LinearRing) DouglasPeuckerSimplifier.
+                Polygon simplified = (Polygon) DouglasPeuckerSimplifier.
                         simplify(geometry, 0.00005);
                 area.setValue(simplified);
             }
