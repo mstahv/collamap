@@ -37,6 +37,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.peimari.maastokanta.domain.AreaFeature;
+import org.peimari.maastokanta.domain.LocationSettings;
 import org.peimari.maastokanta.domain.Person;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.UserGroup;
@@ -72,6 +73,15 @@ public class AppService {
     private UserGroup group;
     private CoordinateReferenceSystem dataCRS;
     private MathTransform transform;
+    
+    private LocationSettings locationSettings;
+
+    public LocationSettings getLocationSettings() {
+        if(locationSettings == null) {
+            locationSettings = new LocationSettings();
+        }
+        return locationSettings;
+    }
 
     public boolean isAuthtenticated() {
         return group != null;
