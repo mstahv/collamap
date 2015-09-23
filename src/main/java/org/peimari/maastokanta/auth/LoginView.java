@@ -19,11 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.vaadin.addon.oauthpopup.OAuthListener;
 import org.vaadin.addon.oauthpopup.OAuthPopupOpener;
-import org.vaadin.maddon.button.MButton;
-import org.vaadin.maddon.label.Header;
-import org.vaadin.maddon.layouts.MVerticalLayout;
 import org.vaadin.spring.UIScope;
 import org.vaadin.spring.VaadinComponent;
+import org.vaadin.viritin.button.MButton;
+import org.vaadin.viritin.label.Header;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 /**
  *

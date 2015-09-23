@@ -22,6 +22,10 @@ public class Location implements Serializable {
         this.accuracy = accuracy;
     }
 
+    public Location() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     public double getAccuracy() {
         return accuracy;
     }
@@ -33,9 +37,21 @@ public class Location implements Serializable {
     public Point getPoint() {
         return point;
     }
+
+    public void setPoint(Point point) {
+        this.point = point;
+    }
     
     public Instant getInstant() {
         return instant;
+    }
+
+    public void setInstant(Instant instant) {
+        this.instant = instant;
+    }
+
+    public void setAccuracy(double accuracy) {
+        this.accuracy = accuracy;
     }
 
 }

@@ -1,6 +1,5 @@
 package org.peimari.maastokanta;
 
-import com.vaadin.data.Property;
 import com.vaadin.server.Page;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -32,18 +31,18 @@ import org.vaadin.addon.leaflet.editable.PolygonField;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
 import org.vaadin.addon.leaflet.util.PointField;
-import org.vaadin.maddon.BeanBinder;
-import org.vaadin.maddon.button.MButton;
-import org.vaadin.maddon.button.PrimaryButton;
-import org.vaadin.maddon.components.DisclosurePanel;
-import org.vaadin.maddon.fields.CaptionGenerator;
-import org.vaadin.maddon.fields.MTextArea;
-import org.vaadin.maddon.fields.MTextField;
-import org.vaadin.maddon.fields.TypedSelect;
-import org.vaadin.maddon.layouts.MHorizontalLayout;
-import org.vaadin.maddon.layouts.MVerticalLayout;
 import org.vaadin.spring.UIScope;
 import org.vaadin.spring.VaadinComponent;
+import org.vaadin.viritin.BeanBinder;
+import org.vaadin.viritin.button.MButton;
+import org.vaadin.viritin.button.PrimaryButton;
+import org.vaadin.viritin.components.DisclosurePanel;
+import org.vaadin.viritin.fields.CaptionGenerator;
+import org.vaadin.viritin.fields.MTextArea;
+import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritin.fields.TypedSelect;
+import org.vaadin.viritin.layouts.MHorizontalLayout;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 @UIScope
 @VaadinComponent
@@ -190,7 +189,7 @@ public class FeatureEditor extends Window implements ClickListener {
         geometryField.getMap().zoomToExtent(bounds);
     }
 
-    void setCenterAndZoom(Point center, Integer zoomLevel) {
+    void setCenterAndZoom(Point center, Double zoomLevel) {
         geometryField.getMap().setCenter(center);
         geometryField.getMap().setZoomLevel(zoomLevel);
     }

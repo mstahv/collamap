@@ -20,25 +20,29 @@ import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vividsolutions.jts.geom.LineString;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.LocationRepository;
 import org.peimari.maastokanta.backend.Repository;
+import org.peimari.maastokanta.domain.DeviceMapping;
 import org.peimari.maastokanta.domain.Location;
 import org.peimari.maastokanta.domain.LocationSettings;
+import org.peimari.maastokanta.domain.LocationWithTail;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.Style;
 import org.peimari.maastokanta.domain.UserGroup;
@@ -50,14 +54,18 @@ import org.vaadin.addon.leaflet.LFeatureGroup;
 import org.vaadin.addon.leaflet.LLayerGroup;
 import org.vaadin.addon.leaflet.LMap;
 import org.vaadin.addon.leaflet.LMarker;
+import org.vaadin.addon.leaflet.LPolyline;
 import org.vaadin.addon.leaflet.LTileLayer;
 import org.vaadin.addon.leaflet.LeafletLayer;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.JTSUtil;
-import org.vaadin.maddon.MBeanFieldGroup;
-import org.vaadin.maddon.fields.MTextField;
-import org.vaadin.maddon.label.RichText;
 import org.vaadin.spring.touchkit.TouchKitUI;
+import org.vaadin.viritin.MBeanFieldGroup;
+import org.vaadin.viritin.fields.ElementCollectionField;
+import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritin.fields.TypedSelect;
+import org.vaadin.viritin.label.RichText;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 /**
  *
@@ -94,18 +102,44 @@ public class MobileUI extends UI {
 
     MTextField userName = new MTextField("Username");
     MTextField group = new MTextField("Sharing group");
+    private boolean centerNextLocation = true;
+
+    public static class DeviceMappingFields {
+
+        public MTextField imei = new MTextField().withFullWidth();
+        public MTextField name = new MTextField().withWidth("40px");
+        public MTextField group = new MTextField().withWidth("40px");
+        public Switch enabled = new Switch("");
+
+    }
+
+    ElementCollectionField<DeviceMapping> deviceMappings = new ElementCollectionField<>(
+            DeviceMapping.class, DeviceMappingFields.class).withCaption(
+            "Dogs").expand("imei").withFullWidth().setAllowRemovingItems(false);
+
     Switch locationSharing = new Switch("Share location");
+
+    TypedSelect<Integer> trackingInterval = new TypedSelect(
+            "Tracking interval(s)").setOptions(5, 10, 30).withFullWidth();
+
+    int amountOfRepeatedPositionRequests = 0;
+    private static final int MAX_GEOLOC_CHECKS = 30;
 
     private PositionCallback positionCallBack = new PositionCallback() {
 
         @Override
         public void onSuccess(Position position) {
+            amountOfRepeatedPositionRequests++;
+            double accuracy = position.getAccuracy();
+            if (amountOfRepeatedPositionRequests < MAX_GEOLOC_CHECKS && accuracy > 50) {
+                Geolocator.detect(positionCallBack);
+                return;
+            }
             final Point myloc = new Point(position.getLatitude(),
                     position.getLongitude());
-            double accuracy = position.getAccuracy();
             if (accuracy > 50) {
                 Notification.show(
-                        "Accurasy is pretty weak, only " + accuracy + " meters. Relocating in couple of seconds might help.");
+                        "Accurasy is pretty weak, only " + accuracy + " meters. Relocating again in couple of seconds might help.");
             }
             if (accuracy < 15) {
                 accuracy = 15;
@@ -118,9 +152,11 @@ public class MobileUI extends UI {
                 me.setPoint(myloc);
                 me.setRadius(accuracy);
             }
-            map.setCenter(myloc);
-            int zoomlevel = findAppropriateZoomlevel(accuracy);
-            map.setZoomLevel(zoomlevel);
+            if(centerNextLocation) {
+                double zoomlevel = findAppropriateZoomlevel(accuracy);
+                map.setCenter(myloc, zoomlevel);
+                centerNextLocation = false;
+           }
             locate.setEnabled(true);
 
             others.removeAllComponents();
@@ -137,28 +173,66 @@ public class MobileUI extends UI {
                         groupName);
                 for (Location l : locations) {
                     if (!l.getName().equals(myName)) {
+
                         LMarker lMarker = new LMarker(l.getPoint());
-                        long secondsAgo = now.getEpochSecond() - l.getInstant().
+                        long secondsAgo = now.getEpochSecond() - l.
+                                getInstant().
                                 getEpochSecond();
                         long minutesAgo = secondsAgo / 60;
                         lMarker.setPopup(
                                 l.getName() + ", " + minutesAgo + "' ago, " + l.
                                 getAccuracy() + "m accuracy");
                         others.addComponent(lMarker);
+                        if (l instanceof LocationWithTail) {
+                            LocationWithTail locationWithTail = (LocationWithTail) l;
+
+                            com.vividsolutions.jts.geom.Point lastpoint = locationWithTail.
+                                    getPoint();
+                            List<Point> points = locationWithTail.getTail().
+                                    stream().map(p -> new Point(p.getY(), p.
+                                            getX())).collect(
+                                    Collectors.toList());
+                            points.add(new Point(lastpoint.getY(), lastpoint.
+                                    getX()));
+                            LPolyline tail = new LPolyline(points.toArray(
+                                    new Point[points.size()]));
+                            others.addComponent(tail);
+                        }
+
                     }
                 }
                 if (others.getParent() == null) {
                     map.addComponent(others);
+                }
+                if(trackingInterval.getValue() != null) {
+                    setPollInterval(trackingInterval.getValue()*1000);
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(trackingInterval.getValue()*1000);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(MobileUI.class.getName()).
+                                        log(Level.SEVERE, null, ex);
+                            }
+                            access(() -> {
+                                Geolocator.detect(positionCallBack);
+                            });
+                        }
+                    }.start();
+                            
                 }
             }
         }
 
         @Override
         public void onFailure(int errorCode) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            Notification.show("Geolocation request failed " + errorCode,
+                    Notification.Type.ERROR_MESSAGE);
+            locate.setEnabled(true);
         }
 
-        private int findAppropriateZoomlevel(double accuracy) {
+        private double findAppropriateZoomlevel(double accuracy) {
             final int screenW = MobileUI.this.getPage().
                     getBrowserWindowWidth();
             double[] mPerPixel = new double[]{156412, 78206, 39103, 19551, 9776, 4888, 2444, 1222, 610.984, 305.492, 152.746, 76.373, 38.187, 19.093, 9.547, 4.773, 2.387, 1.193, 0.596, 0.298};
@@ -171,8 +245,8 @@ public class MobileUI extends UI {
                     break;
                 }
             }
-            if (zoomLevel > 16) {
-                zoomLevel = 16;
+            if (zoomLevel > 15) {
+                zoomLevel = 15;
             }
             return zoomLevel;
         }
@@ -199,8 +273,10 @@ public class MobileUI extends UI {
 
             @Override
             public void onSuccess(String value) {
-                for (String id : value.split(",")) {
-                    addGroup(repo.getGroup(id));
+                if (value != null) {
+                    for (String id : value.split(",")) {
+                        addGroup(repo.getGroup(id));
+                    }
                 }
             }
 
@@ -214,36 +290,54 @@ public class MobileUI extends UI {
 
             @Override
             public void onSuccess(String value) {
-                ObjectMapper om = new ObjectMapper();
-                try {
-                    LocationSettings fromLs = om.readValue(value,
-                            LocationSettings.class);
-                    userName.setValue(fromLs.getUserName());
-                    group.setValue(fromLs.getGroup());
-                    locationSharing.setValue(fromLs.isLocationSharing());
-                } catch (IOException ex) {
-                    Logger.getLogger(MobileUI.class.getName()).
-                            log(Level.SEVERE, null, ex);
+                if (value != null) {
+                    ObjectMapper om = new ObjectMapper();
+                    try {
+                        LocationSettings fromLs = om.readValue(value,
+                                LocationSettings.class);
+                        userName.setValue(fromLs.getUserName());
+                        group.setValue(fromLs.getGroup());
+                        locationSharing.setValue(fromLs.isLocationSharing());
+                        deviceMappings.setValue(fromLs.getDeviceMappings());
+                        trackingInterval.setValue(fromLs.getTrackingInterval());
+                        if (trackingInterval.getValue() != null) {
+                            amountOfRepeatedPositionRequests = 0;
+                            Geolocator.detect(positionCallBack);
+                        }
+                        if (fromLs.isLocationSharing()) {
+                            locate.click();
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(MobileUI.class.getName()).
+                                log(Level.SEVERE, null, ex);
+                    }
                 }
             }
 
             @Override
             public void onFailure(LocalStorageCallback.FailureEvent error) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                Notification.show(
+                        "Local storage not allowed by your device!? " + error.
+                        getMessage());
             }
         });
 
         locate.setDisableOnClick(true);
         mapView.setLeftComponent(locate);
         locate.addClickListener(e -> {
+            amountOfRepeatedPositionRequests = 0;
             Geolocator.detect(positionCallBack);
+            centerNextLocation = true;
         });
     }
 
     private void initMap() {
         map.removeAllComponents();
         final LTileLayer peruskartta = new LTileLayer(
-                "http://v3.tahvonen.fi/mvm71/tiles/peruskartta/{z}/{x}/{y}.png");
+                "http://v4.tahvonen.fi/mvm75/tiles/peruskartta/{z}/{x}/{y}.png");
+//        final LTileLayer peruskartta = new LTileLayer(
+//                "http://localhost:8888/tiles/peruskartta/{z}/{x}/{y}.png");
+        peruskartta.setAttributionString("Maastokartta,Maanmittauslaitos");
         peruskartta.setDetectRetina(true);
         map.addLayer(peruskartta);
         zoomToContent();
@@ -280,23 +374,23 @@ public class MobileUI extends UI {
                                 put("layers", value,
                                         new LocalStorageCallback() {
 
-                                            @Override
-                                            public void onSuccess(String value) {
-                                                addGroup(group);
-                                                if (navman.getCurrentComponent() == settingsView) {
-                                                    navman.navigateBack();
-                                                }
-                                            }
+                                    @Override
+                                    public void onSuccess(String value) {
+                                        addGroup(group);
+                                        if (navman.getCurrentComponent() == settingsView) {
+                                            navman.navigateBack();
+                                        }
+                                    }
 
-                                            @Override
+                                    @Override
 
-                                            public void onFailure(
-                                                    LocalStorageCallback.FailureEvent error) {
-                                                        throw new UnsupportedOperationException(
-                                                                "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                                                    }
+                                    public void onFailure(
+                                            LocalStorageCallback.FailureEvent error) {
+                                        throw new UnsupportedOperationException(
+                                                "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                                    }
 
-                                        });
+                                });
                     }
 
                     @Override
@@ -354,9 +448,13 @@ public class MobileUI extends UI {
                 "Save location sharing settings");
         saveLocationSharingSettings.addClickListener(e -> {
             ObjectMapper om = new ObjectMapper();
+            final LocationSettings locationSettings = service.
+                    getLocationSettings();
+            for (DeviceMapping dm : locationSettings.getDeviceMappings()) {
+                locationRepository.saveDeviceMapping(dm);
+            }
             try {
-                String json = om.writeValueAsString(service.
-                        getLocationSettings());
+                String json = om.writeValueAsString(locationSettings);
                 LocalStorage.get().put("locationSharing", json);
             } catch (JsonProcessingException ex) {
                 Logger.getLogger(MobileUI.class.getName()).
@@ -367,13 +465,18 @@ public class MobileUI extends UI {
                 "Location sharing");
         locationSharingLayout.addComponents(new RichText().withMarkDownResource(
                 "/locationsharing.md"), userName, group, locationSharing,
-                saveLocationSharingSettings);
+                trackingInterval
+        );
 
         settingsView.setContent(new CssLayout(vcg, clearAll,
-                locationSharingLayout));
+                locationSharingLayout, new MVerticalLayout(deviceMappings),
+                saveLocationSharingSettings));
     }
 
     protected void addGroup(UserGroup group) {
+        if (group == null) {
+            return;
+        }
         if (grouptToLayers.containsKey(group)) {
             Notification.show("Layer already rendered");
             return;

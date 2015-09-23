@@ -18,13 +18,13 @@ import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.Style;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.maddon.button.MButton;
-import org.vaadin.maddon.fields.MTable;
-import org.vaadin.maddon.fields.MTextArea;
-import org.vaadin.maddon.fields.MTextField;
-import org.vaadin.maddon.layouts.MVerticalLayout;
 import org.vaadin.spring.UIScope;
 import org.vaadin.spring.VaadinComponent;
+import org.vaadin.viritin.button.MButton;
+import org.vaadin.viritin.fields.MTable;
+import org.vaadin.viritin.fields.MTextArea;
+import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 @UIScope
 @VaadinComponent

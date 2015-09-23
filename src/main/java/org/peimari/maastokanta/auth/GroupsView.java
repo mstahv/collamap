@@ -16,12 +16,12 @@ import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.maddon.button.MButton;
-import org.vaadin.maddon.fields.MTextField;
-import org.vaadin.maddon.label.Header;
-import org.vaadin.maddon.layouts.MVerticalLayout;
 import org.vaadin.spring.UIScope;
 import org.vaadin.spring.VaadinComponent;
+import org.vaadin.viritin.button.MButton;
+import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritin.label.Header;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 /**
  *
@@ -72,6 +72,7 @@ class GroupsView extends MVerticalLayout {
     public void attach() {
         super.attach();
         Table existing = new Table();
+        existing.setHeight("300px");
         existing.addContainerProperty("name", String.class, "");
         for (Entry<String, String> e : service.getPerson().getIdToGroup().
                 entrySet()) {
@@ -112,10 +113,11 @@ class GroupsView extends MVerticalLayout {
                 userGroup(group);
             }
         });
-        
-        addComponents(header, new MVerticalLayout(existing),
-                new MVerticalLayout(joinHeader, existing, newGroupheader),
-                new MVerticalLayout(newName, createNew),
+      
+        withSpacing(false);
+        addComponents(header,
+                new MVerticalLayout(new Header("Choose existing:").setHeaderLevel(3), existing),
+                new MVerticalLayout(newGroupheader,newName, createNew),
                 new MVerticalLayout(forceOpenId,forceOpen).withCaption("Force open with id (admin only)")
         );
     }

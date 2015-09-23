@@ -16,15 +16,15 @@
         <start-class>org.peimari.maastokanta.Application</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <version.vaadin>7.3.4</version.vaadin>
-        <vaadin.plugin.version>7.3.4</vaadin.plugin.version>
+        <version.vaadin>7.5.6</version.vaadin>
+        <vaadin.plugin.version>7.5.6</vaadin.plugin.version>
         <geotools.version>10.2</geotools.version>
     </properties>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.2.0.BUILD-SNAPSHOT</version>
+        <version>1.2.5.RELEASE</version>
     </parent>
 
     <dependencies>
@@ -69,7 +69,7 @@
         <dependency>
             <groupId>com.vaadin.addon</groupId>
             <artifactId>vaadin-touchkit-agpl</artifactId>
-            <version>4.0.0</version>
+            <version>4.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -96,11 +96,6 @@
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-client-compiled</artifactId>
-            <version>${version.vaadin}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
             <artifactId>vaadin-server</artifactId>
             <version>${version.vaadin}</version>
             <exclusions>
@@ -122,15 +117,14 @@
         <dependency>
             <groupId>org.vaadin.addon</groupId>
             <artifactId>v-leaflet-editable</artifactId>
-            <version>0.6.0-SNAPSHOT</version>
+            <version>1.0.0-b1</version>
         </dependency>
                 
         <dependency>
-            <groupId>org.peimari</groupId>
-            <artifactId>maddon</artifactId>
-            <version>1.18-SNAPSHOT</version>
+            <groupId>org.vaadin</groupId>
+            <artifactId>viritin</artifactId>
+            <version>1.36</version>
         </dependency>
-
         <dependency>
             <groupId>org.vaadin.addon</groupId>
             <artifactId>oauthpopup</artifactId>
@@ -187,6 +181,11 @@
             <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache-web</artifactId>
             <version>2.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.vaadin.addon</groupId>
+            <artifactId>v-leaflet</artifactId>
+            <version>1.0.0-b2</version>
         </dependency>
     </dependencies>
 

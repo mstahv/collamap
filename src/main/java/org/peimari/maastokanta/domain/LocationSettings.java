@@ -1,6 +1,8 @@
 package org.peimari.maastokanta.domain;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -13,6 +15,10 @@ public class LocationSettings implements Serializable {
     private String userName;
 
     private boolean locationSharing;
+
+    private Integer trackingInterval;
+
+    private List<DeviceMapping> deviceMappings = new ArrayList<>();
 
     /**
      * Get the value of locationSharing
@@ -66,6 +72,22 @@ public class LocationSettings implements Serializable {
      */
     public void setGroup(String group) {
         this.group = group;
+    }
+
+    public List<DeviceMapping> getDeviceMappings() {
+        return deviceMappings;
+    }
+
+    public void setDeviceMappings(List<DeviceMapping> deviceMappings) {
+        this.deviceMappings = deviceMappings;
+    }
+
+    public Integer getTrackingInterval() {
+        return trackingInterval;
+    }
+
+    public void setTrackingInterval(Integer trackingInterval) {
+        this.trackingInterval = trackingInterval;
     }
 
 }
