@@ -14,6 +14,7 @@ public class ServerThread extends Thread {
 
     private final Server server;
     private Socket socket = null;
+    private boolean firstMessageReceived = false;
 
     public ServerThread(Server server, Socket socket) {
         super("ServerThread");
@@ -36,8 +37,13 @@ public class ServerThread extends Thread {
                 try {
                     inputLine = inputLine.trim();
                     if (!inputLine.isEmpty()) {
-                        Logger.getLogger(getClass().getName()).log(Level.INFO,
+                        Logger.getLogger(getClass().getName()).log(Level.WARNING,
                                 "MSG from device:{0}", inputLine);
+//                        if(!firstMessageReceived) {
+//                        Logger.getLogger(getClass().getName()).log(Level.WARNING,
+//                                "First message from device:{0}", inputLine);
+//                                firstMessageReceived = true;
+//                        }
                         update = kkp.processInput(inputLine);
                         server.persist(update);
                     }

@@ -90,6 +90,11 @@
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-client-compiled</artifactId>
+            <version>${version.vaadin}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
             <artifactId>vaadin-client-compiler</artifactId>
             <version>${version.vaadin}</version>
             <scope>provided</scope>
@@ -185,7 +190,7 @@
         <dependency>
             <groupId>org.vaadin.addon</groupId>
             <artifactId>v-leaflet</artifactId>
-            <version>1.0.0-b2</version>
+            <version>1.0.0-b3-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

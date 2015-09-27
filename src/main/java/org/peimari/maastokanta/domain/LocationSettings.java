@@ -1,13 +1,17 @@
 package org.peimari.maastokanta.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.vaadin.addon.leaflet.shared.Point;
 
 /**
  *
  * @author matti ät vaadin.com
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LocationSettings implements Serializable {
 
     private String group;
@@ -19,6 +23,12 @@ public class LocationSettings implements Serializable {
     private Integer trackingInterval;
 
     private List<DeviceMapping> deviceMappings = new ArrayList<>();
+    private List<String> layers = new ArrayList();
+
+    private Double lastCenterLon;
+    private Double lastCenterLat;
+
+    private Integer lastZoomLevel;
 
     /**
      * Get the value of locationSharing
@@ -88,6 +98,56 @@ public class LocationSettings implements Serializable {
 
     public void setTrackingInterval(Integer trackingInterval) {
         this.trackingInterval = trackingInterval;
+    }
+
+    @JsonIgnore
+    public Point getLastCenter() {
+        if (lastCenterLat == null) {
+            return null;
+        }
+        return new Point(lastCenterLat, lastCenterLon);
+    }
+
+    public void setLastCenter(Point lastCenter) {
+        if (lastCenter == null) {
+            lastCenterLat = null;
+            lastCenterLon = null;
+        } else {
+            lastCenterLat = lastCenter.getLat();
+            lastCenterLon = lastCenter.getLon();
+        }
+    }
+
+    public Integer getLastZoomLevel() {
+        return lastZoomLevel;
+    }
+
+    public void setLastZoomLevel(Integer lastZoomLevel) {
+        this.lastZoomLevel = lastZoomLevel;
+    }
+
+    public List<String> getLayers() {
+        return layers;
+    }
+
+    public void setLayers(List<String> layers) {
+        this.layers = layers;
+    }
+
+    public Double getLastCenterLon() {
+        return lastCenterLon;
+    }
+
+    public void setLastCenterLon(Double lastCenterLon) {
+        this.lastCenterLon = lastCenterLon;
+    }
+
+    public Double getLastCenterLat() {
+        return lastCenterLat;
+    }
+
+    public void setLastCenterLat(Double lastCenterLat) {
+        this.lastCenterLat = lastCenterLat;
     }
 
 }

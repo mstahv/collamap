@@ -5,6 +5,7 @@ import org.geotools.measure.AngleFormat;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 /** Parsing
  * Created by samie on 19/06/14.
@@ -15,6 +16,10 @@ public class GPSProtocol {
 
     AngleFormat latFormat = new AngleFormat("DDMM.mmmmm");
     AngleFormat lonFormat = new AngleFormat("DDDMM.mmmmm");
+
+    public GPSProtocol() {
+        format.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
 
     public Update processInput(String input) throws ParseException {
         Update out = new Update();

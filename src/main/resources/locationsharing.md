@@ -1,1 +1,1 @@
-When enabled your location will be displayed also with others in the current group each time you locate yourself. E.g. when entering a stand, it might be safer for everybody if you share your locations. Positions are stored for 1 hour on the server.
+When enabled your location will be displayed also with others in the current group each time you locate yourself. E.g. when entering a stand, it might be safer for everybody if you share your locations. Positions are stored in temporary memory on the server.

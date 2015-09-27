@@ -6,6 +6,7 @@
 package org.peimari.maastokanta.auth;
 
 import com.vaadin.annotations.Theme;
+import com.vaadin.annotations.Widgetset;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.UI;
 import org.peimari.maastokanta.backend.AppService;
@@ -20,6 +21,7 @@ import org.vaadin.spring.touchkit.TouchKitUI;
  */
 @TouchKitUI(path = "/auth")
 @Theme("valo")
+@Widgetset("org.peimari.maastokanta.AppWidgetSet")
 public class AuthenticationUI extends UI {
 
     @Autowired

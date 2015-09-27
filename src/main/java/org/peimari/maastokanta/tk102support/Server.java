@@ -27,6 +27,7 @@ public class Server {
 
     private final int portNumber;
     private boolean running = false;
+    ServerSocket serverSocket;
 
     public Server() {
         this(51234);
@@ -52,7 +53,6 @@ public class Server {
 
             @Override
             public void run() {
-                ServerSocket serverSocket;
                 try {
                     serverSocket = new ServerSocket(portNumber);
                     while (isRunning()) {
@@ -70,26 +70,30 @@ public class Server {
     @PreDestroy
     public void stop() {
         this.running = false;
+        try {
+            serverSocket.close();
+            Logger.getLogger(Server.class.getName()).log(Level.WARNING, "Server closed");
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     static public void main(String[] args) {
         new Server().start();
-
     }
 
     void persist(Update update) {
 
         Logger.getLogger(Server.class.getName()).
                 log(Level.INFO, "Received update " + update.toString());
-
         DeviceMapping mapping = repo.getDeviceMapping(update.getImei());
-        if (mapping != null) {
-            Location location = new Location(mapping.getName(), JTSUtil.toPoint(
-                    new Point(update.getLat(), update.getLon())), Instant.now(),
-                    40);
-            repo.saveLocationWithTail(mapping.getGroup(), location);
+        if (mapping != null && mapping.getEnabled()) {
+            repo.saveLocationWithTail(mapping.getGroup(),mapping.getName(), update);
             Logger.getLogger(Server.class.getName()).
                     log(Level.INFO, "Saved location!");
+        } else {
+            Logger.getLogger(Server.class.getName()).
+                    log(Level.INFO, "Dropped update, device disabled or not mapped");
         }
     }
 

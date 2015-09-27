@@ -272,4 +272,8 @@ public class AppService {
         return "--";
     }
 
+    public void setLocationSettings(LocationSettings fromLs) {
+        locationSettings = fromLs;
+    }
+
 }
