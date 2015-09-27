@@ -9,6 +9,7 @@ import com.vaadin.addon.touchkit.gwt.client.vcom.Position;
 import com.vaadin.addon.touchkit.ui.NavigationButton;
 import com.vaadin.addon.touchkit.ui.NavigationManager;
 import com.vaadin.addon.touchkit.ui.NavigationView;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
@@ -63,6 +64,7 @@ import org.vaadin.addon.leaflet.util.JTSUtil;
 @Widgetset("org.peimari.maastokanta.MobileAppWidgetSet")
 @Theme("touchkit")
 @Title("Collamap")
+@Push
 public class MobileUI extends UI {
 
     private static final ScheduledExecutorService executor = Executors.
