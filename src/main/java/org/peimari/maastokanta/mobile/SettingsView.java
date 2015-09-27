@@ -9,6 +9,8 @@ import com.vaadin.addon.touchkit.ui.NavigationView;
 import com.vaadin.addon.touchkit.ui.Switch;
 import com.vaadin.addon.touchkit.ui.VerticalComponentGroup;
 import com.vaadin.event.FieldEvents;
+import com.vaadin.spring.annotation.SpringComponent;
+import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Notification;
@@ -26,8 +28,6 @@ import org.peimari.maastokanta.domain.DeviceMapping;
 import org.peimari.maastokanta.domain.LocationSettings;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.spring.UIScope;
-import org.vaadin.spring.VaadinComponent;
 import org.vaadin.viritin.MBeanFieldGroup;
 import org.vaadin.viritin.fields.ElementCollectionField;
 import org.vaadin.viritin.fields.MTextField;
@@ -39,7 +39,7 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
  *
  * @author Matti Tahvonen
  */
-@VaadinComponent
+@SpringComponent
 @UIScope
 public class SettingsView extends NavigationView {
 

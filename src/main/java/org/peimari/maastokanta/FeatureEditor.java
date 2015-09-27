@@ -1,6 +1,8 @@
 package org.peimari.maastokanta;
 
 import com.vaadin.server.Page;
+import com.vaadin.spring.annotation.SpringComponent;
+import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -31,8 +33,6 @@ import org.vaadin.addon.leaflet.editable.PolygonField;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
 import org.vaadin.addon.leaflet.util.PointField;
-import org.vaadin.spring.UIScope;
-import org.vaadin.spring.VaadinComponent;
 import org.vaadin.viritin.BeanBinder;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.button.PrimaryButton;
@@ -45,7 +45,7 @@ import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
 @UIScope
-@VaadinComponent
+@SpringComponent
 public class FeatureEditor extends Window implements ClickListener {
 
     @Autowired

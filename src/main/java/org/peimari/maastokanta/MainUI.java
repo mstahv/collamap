@@ -13,6 +13,7 @@ import com.vaadin.server.Page;
 import com.vaadin.server.Resource;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
@@ -29,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
+import org.peimari.maastokanta.auth.LoginView;
 import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.KtUtil;
 import org.peimari.maastokanta.backend.Repository;
@@ -48,7 +50,6 @@ import org.vaadin.addon.leaflet.LTileLayer;
 import org.vaadin.addon.leaflet.LeafletClickEvent;
 import org.vaadin.addon.leaflet.LeafletClickListener;
 import org.vaadin.addon.leaflet.util.JTSUtil;
-import org.vaadin.spring.touchkit.TouchKitUI;
 import org.vaadin.viritin.button.ConfirmButton;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.button.PrimaryButton;
@@ -61,7 +62,7 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
  *
  * @author mattitahvonenitmill
  */
-@TouchKitUI(path="/admin")
+@SpringUI(path = "/admin")
 @EnableAutoConfiguration
 @Widgetset("org.peimari.maastokanta.AppWidgetSet")
 @Theme("valo")
@@ -113,6 +114,9 @@ public class MainUI extends UI implements Button.ClickListener,
 
     @Autowired
     PropertiesEditor styleEditor;
+    
+    @Autowired
+    LoginView loginView;
 
     private UserGroup group;
 
@@ -132,9 +136,9 @@ public class MainUI extends UI implements Button.ClickListener,
             }
             service.setPerson(person);
         }
-
+        
         if (!service.isAuthtenticated()) {
-            Page.getCurrent().setLocation(request.getContextPath() + "/auth");
+            setContent(loginView);
             return;
         }
 

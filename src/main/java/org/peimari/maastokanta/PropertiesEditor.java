@@ -4,6 +4,8 @@ import com.vaadin.data.Property;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.util.converter.Converter;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.spring.annotation.SpringComponent;
+import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
@@ -18,8 +20,6 @@ import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.Style;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.spring.UIScope;
-import org.vaadin.spring.VaadinComponent;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MTable;
 import org.vaadin.viritin.fields.MTextArea;
@@ -27,7 +27,7 @@ import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
 @UIScope
-@VaadinComponent
+@SpringComponent
 public class PropertiesEditor extends Window {
 
     private MTextField name_ = new MTextField("Name");

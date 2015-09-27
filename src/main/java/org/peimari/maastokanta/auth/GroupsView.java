@@ -7,6 +7,8 @@ package org.peimari.maastokanta.auth;
 
 import com.vaadin.data.Property;
 import com.vaadin.server.Page;
+import com.vaadin.spring.annotation.SpringComponent;
+import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Table;
@@ -16,8 +18,6 @@ import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.spring.UIScope;
-import org.vaadin.spring.VaadinComponent;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.label.Header;
@@ -28,7 +28,7 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
  * @author mstahv
  */
 @UIScope
-@VaadinComponent
+@SpringComponent
 class GroupsView extends MVerticalLayout {
 
     @Autowired

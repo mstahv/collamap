@@ -1,5 +1,7 @@
 package org.peimari.maastokanta;
 
+import com.vaadin.spring.annotation.SpringComponent;
+import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
@@ -16,15 +18,13 @@ import org.vaadin.addon.leaflet.LOpenStreetMapLayer;
 import org.vaadin.addon.leaflet.LPolygon;
 import org.vaadin.addon.leaflet.LeafletLayer;
 import org.vaadin.addon.leaflet.util.JTSUtil;
-import org.vaadin.spring.UIScope;
-import org.vaadin.spring.VaadinComponent;
 
 /**
  *
  * @author mattitahvonenitmill
  */
 @UIScope
-@VaadinComponent
+@SpringComponent
 public class GeometryPicker extends Window {
 
     @Autowired

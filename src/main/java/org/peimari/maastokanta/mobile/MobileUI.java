@@ -9,13 +9,12 @@ import com.vaadin.addon.touchkit.gwt.client.vcom.Position;
 import com.vaadin.addon.touchkit.ui.NavigationButton;
 import com.vaadin.addon.touchkit.ui.NavigationManager;
 import com.vaadin.addon.touchkit.ui.NavigationView;
-import com.vaadin.addon.touchkit.ui.Switch;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
-import com.vaadin.event.UIEvents;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
@@ -54,14 +53,12 @@ import org.vaadin.addon.leaflet.LTileLayer;
 import org.vaadin.addon.leaflet.LeafletLayer;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.JTSUtil;
-import org.vaadin.spring.touchkit.TouchKitUI;
-import org.vaadin.viritin.fields.MTextField;
 
 /**
  *
  * @author Matti Tahvonen <matti@vaadin.com>
  */
-@TouchKitUI()
+@SpringUI(path = "/")
 @EnableAutoConfiguration
 @Widgetset("org.peimari.maastokanta.MobileAppWidgetSet")
 @Theme("touchkit")

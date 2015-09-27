@@ -1,81 +1,84 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.peimari.maastokanta.auth;
 
 import com.google.gson.Gson;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.Page;
+import com.vaadin.server.RequestHandler;
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinResponse;
+import com.vaadin.server.VaadinServletResponse;
+import com.vaadin.server.VaadinSession;
+import com.vaadin.spring.annotation.SpringComponent;
+import com.vaadin.spring.annotation.UIScope;
+import com.vaadin.ui.Link;
+import com.vaadin.ui.themes.ValoTheme;
+import java.io.IOException;
+import org.peimari.maastokanta.backend.AppService;
+import org.peimari.maastokanta.backend.Repository;
+import org.peimari.maastokanta.domain.Person;
 import org.scribe.builder.ServiceBuilder;
 import org.scribe.model.OAuthRequest;
 import org.scribe.model.Response;
 import org.scribe.model.Token;
 import org.scribe.model.Verb;
+import org.scribe.model.Verifier;
 import org.scribe.oauth.OAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.vaadin.addon.oauthpopup.OAuthListener;
-import org.vaadin.addon.oauthpopup.OAuthPopupOpener;
-import org.vaadin.spring.UIScope;
-import org.vaadin.spring.VaadinComponent;
-import org.vaadin.viritin.button.MButton;
-import org.vaadin.viritin.label.Header;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
 /**
  *
+ * @author Matti Tahvonen
  */
+@SpringComponent
 @UIScope
-@VaadinComponent
-public class LoginView extends MVerticalLayout implements OAuthListener {
-
-    private final Header loginHeader = new Header("Login with Google+");
-
-    private final Button gplusLoginButton = new MButton("Login");
-
-    private String gpluskey;
-    private String gplussecret;
+public class LoginView extends MVerticalLayout implements RequestHandler {
 
     @Autowired
     Environment environment;
+    @Autowired
+    AppService appService;
+    @Autowired
+    Repository repo;
+    @Autowired
+    GroupsView groupsView;
+
+    Link loginLink;
+    private String gpluskey;
+    private String gplussecret;
+
+    private OAuthService service;
+    private String redirectUrl;
+
+    public LoginView() {
+    }
 
     @Override
     public void attach() {
         super.attach();
+        
+        if(appService.getPerson() != null) {
+            add(groupsView);
+            return;
+        }
+
+        redirectUrl = Page.getCurrent().getLocation().toString();
+
         gpluskey = environment.getProperty("gpluskey");
         gplussecret = environment.getProperty("gplussecret");
 
-        addComponents(loginHeader, gplusLoginButton);
-        OAuthPopupOpener opener = new OAuthPopupOpener(
-                Google2Api.class, gpluskey, gplussecret);
-        opener.setScope("email");
-        opener.extend(gplusLoginButton);
-        opener.addOAuthListener(this);
-    }
+        service = createService();
+        String url = service.getAuthorizationUrl(null);
 
-    @Override
-    public void authSuccessful(String accessToken, String accessTokenSecret) {
+        loginLink = new Link("Login with Google", new ExternalResource(url));
+        loginLink.addStyleName(ValoTheme.LINK_LARGE);
 
-        final Token token = new Token(accessToken, accessTokenSecret);
+        setCaption("Login");
+        add(loginLink);
 
-        Notification.show("authSuccessful: " + accessToken + " " + accessTokenSecret);
+        VaadinSession.getCurrent().addRequestHandler(this);
 
-        OAuthRequest request = new OAuthRequest(Verb.GET, "https://www.googleapis.com/plus/v1/people/me");
-        createService().signRequest(token, request);
-        Response resp = request.send();
-
-        GooglePlusAnswer answer = new Gson().fromJson(resp.getBody(), GooglePlusAnswer.class);
-
-        AuthenticationUI.get().setUser(answer.emails[0].value, answer.displayName);
-
-    }
-
-    @Override
-    public void authDenied(String reason) {
-        Notification.show("authDenied:" + reason, Type.ERROR_MESSAGE);
     }
 
     private OAuthService createService() {
@@ -83,8 +86,52 @@ public class LoginView extends MVerticalLayout implements OAuthListener {
         sb.provider(Google2Api.class);
         sb.apiKey(gpluskey);
         sb.apiSecret(gplussecret);
-        sb.callback("oob");
+        sb.scope("email");
+        String callBackUrl = Page.getCurrent().getLocation().toString();
+        if (callBackUrl.contains("#")) {
+            callBackUrl = callBackUrl.substring(0, callBackUrl.indexOf("#"));
+        }
+        sb.callback(callBackUrl);
         return sb.build();
+    }
+
+    @Override
+    public boolean handleRequest(VaadinSession session, VaadinRequest request,
+            VaadinResponse response) throws IOException {
+        if (request.getParameter("code") != null) {
+            String code = request.getParameter("code");
+            Verifier v = new Verifier(code);
+            Token t = service.getAccessToken(null, v);
+
+            OAuthRequest r = new OAuthRequest(Verb.GET,
+                    "https://www.googleapis.com/plus/v1/people/me");
+            service.signRequest(t, r);
+            Response resp = r.send();
+
+            GooglePlusAnswer answer = new Gson().fromJson(resp.getBody(),
+                    GooglePlusAnswer.class);
+
+            setUser(answer.emails[0].value, answer.displayName);
+
+            VaadinSession.getCurrent().removeRequestHandler(this);
+
+            ((VaadinServletResponse) response).getHttpServletResponse().
+                    sendRedirect(redirectUrl);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void setUser(String email, String displayName) {
+        Person person = repo.getPerson(email);
+        if (person == null) {
+            person = new Person();
+            person.setEmail(email);
+            person.setDisplayName(displayName);
+            repo.persist(person);
+        }
+        appService.setPerson(person);
     }
 
 }
