@@ -1,11 +1,8 @@
 package org.peimari.maastokanta.mobile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vaadin.addon.touchkit.extensions.Geolocator;
 import com.vaadin.addon.touchkit.extensions.LocalStorage;
 import com.vaadin.addon.touchkit.extensions.LocalStorageCallback;
-import com.vaadin.addon.touchkit.extensions.PositionCallback;
-import com.vaadin.addon.touchkit.gwt.client.vcom.Position;
 import com.vaadin.addon.touchkit.ui.NavigationButton;
 import com.vaadin.addon.touchkit.ui.NavigationManager;
 import com.vaadin.addon.touchkit.ui.NavigationView;
@@ -19,6 +16,7 @@ import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -31,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
 import org.peimari.maastokanta.backend.AppService;
 import org.peimari.maastokanta.backend.LocationRepository;
 import org.peimari.maastokanta.backend.Repository;
@@ -56,7 +55,6 @@ import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.JTSUtil;
 
 /**
- *
  * @author Matti Tahvonen <matti@vaadin.com>
  */
 @SpringUI(path = "/")
@@ -66,9 +64,6 @@ import org.vaadin.addon.leaflet.util.JTSUtil;
 @Title("Collamap")
 @Push
 public class MobileUI extends UI {
-
-    private static final ScheduledExecutorService executor = Executors.
-            newScheduledThreadPool(3);
 
     @Autowired
     AppService service;
@@ -86,16 +81,17 @@ public class MobileUI extends UI {
     @Autowired
     SettingsView settingsView;
 
+    @Autowired
+    MyPositionMarker myPositionMarker;
+
     NavigationManager navman = new NavigationManager(mapView);
+    
     LMap map = new LMap();
 
     Button locate = new Button(FontAwesome.BULLSEYE);
 
     LLayerGroup others = new LFeatureGroup();
 
-    LCircle me;
-
-    private boolean centerNextLocation = false;
     private boolean viewPortInitialized = false;
 
     void removeAllLayers() {
@@ -103,164 +99,6 @@ public class MobileUI extends UI {
         grouptToLayers.clear();
         initMap();
     }
-
-    int amountOfRepeatedPositionRequests = 0;
-    private static final int MAX_GEOLOC_CHECKS = 30;
-
-    boolean badAccuracyReported = false;
-
-    private PositionCallback positionCallBack = new PositionCallback() {
-
-        @Override
-        public void onSuccess(Position position) {
-            amountOfRepeatedPositionRequests++;
-            double accuracy = position.getAccuracy();
-            if (amountOfRepeatedPositionRequests < MAX_GEOLOC_CHECKS && accuracy > 50) {
-                Geolocator.detect(positionCallBack);
-                return;
-            }
-            final Point myloc = new Point(position.getLatitude(),
-                    position.getLongitude());
-            if (!badAccuracyReported && accuracy > 50) {
-                Notification.show(
-                        "Accurasy is pretty weak, only " + accuracy + " meters. Relocating again in couple of seconds might help.",
-                        Notification.Type.TRAY_NOTIFICATION);
-                badAccuracyReported = true;
-            }
-            if (accuracy < 15) {
-                accuracy = 15;
-            }
-            if (me == null) {
-                me = new LCircle(myloc, accuracy);
-                me.setColor("red");
-                map.addComponent(me);
-            } else {
-                me.setPoint(myloc);
-                me.setRadius(accuracy);
-            }
-            if (centerNextLocation) {
-                double zoomlevel = findAppropriateZoomlevel(accuracy);
-                if (service.getLocationSettings().getLastZoomLevel() == null || service.
-                        getLocationSettings().getLastZoomLevel() < 13) {
-                    map.setCenter(myloc, zoomlevel);
-                } else {
-                    map.setCenter(myloc, service.getLocationSettings().
-                            getLastZoomLevel().doubleValue());
-                }
-                centerNextLocation = false;
-                service.getLocationSettings().setLastCenter(myloc);
-                int currentZoom = map.getZoomLevel().intValue();
-                if (currentZoom < 13) {
-                    currentZoom = (int) zoomlevel;
-                }
-                service.getLocationSettings().setLastZoomLevel(currentZoom);
-                // TODO save settings to local storage every once in a while...
-            }
-            locate.setEnabled(true);
-
-            others.removeAllComponents();
-
-            if (service.getLocationSettings().isLocationSharing()) {
-                final String myName = service.getLocationSettings().
-                        getUserName();
-                Location location = new Location(myName, JTSUtil.toPoint(myloc),
-                        Instant.now(), position.getAccuracy());
-                final String groupName = service.getLocationSettings().
-                        getGroup();
-                locationRepository.saveLocation(groupName, location);
-                drawOthers(groupName, myName);
-                if (others.getParent() == null) {
-                    map.addComponent(others);
-                }
-            }
-            continueTracking();
-        }
-
-        public void drawOthers(final String groupName, final String myName) {
-            Instant now = Instant.now();
-            List<Location> locations = locationRepository.getLocations(
-                    groupName);
-            for (Location l : locations) {
-                if (!l.getName().equals(myName)) {
-
-                    LMarker lMarker = new LMarker(l.getPoint());
-                    long secondsAgo = now.getEpochSecond() - l.
-                            getInstant().
-                            getEpochSecond();
-                    long minutesAgo = secondsAgo / 60;
-                    String msg = l.getName() + ", " + minutesAgo + "' ago, " + l.
-                            getAccuracy() + "m accur.";
-
-                    if (l instanceof LocationWithTail) {
-                        LocationWithTail locationWithTail = (LocationWithTail) l;
-                        final Update u = locationWithTail.
-                                getLastUpdate();
-                        msg = msg + " bat:" + u.getBatteryLevel()
-                                + " GSM: " + u.getSignalLevel()
-                                + " Sat: " + u.getFixCount()
-                                + " Speed: " + u.getSpeed()
-                                + " Course: " + u.getCourse()
-                                ;
-
-                        com.vividsolutions.jts.geom.Point lastpoint = locationWithTail.
-                                getPoint();
-                        List<Point> points = locationWithTail.getTail().
-                                stream().map(p -> new Point(p.getY(), p.
-                                        getX())).collect(
-                                Collectors.toList());
-                        points.add(new Point(lastpoint.getY(), lastpoint.
-                                getX()));
-                        LPolyline tail = new LPolyline(points.toArray(
-                                new Point[points.size()]));
-                        others.addComponent(tail);
-                    }
-
-                    lMarker.setPopup(msg);
-                    others.addComponent(lMarker);
-
-                }
-            }
-        }
-
-        public void continueTracking() {
-            if (service.getLocationSettings().getTrackingInterval() != null) {
-                final int intervalInMillis = service.getLocationSettings().
-                        getTrackingInterval() * 1000;
-                setPollInterval(intervalInMillis);
-                executor.schedule(() -> {
-                    access(() -> {
-                        Geolocator.detect(positionCallBack);
-                    });
-                }, intervalInMillis, TimeUnit.MILLISECONDS);
-            }
-        }
-
-        @Override
-        public void onFailure(int errorCode) {
-            Notification.show("Geolocation request failed " + errorCode,
-                    Notification.Type.ERROR_MESSAGE);
-            locate.setEnabled(true);
-        }
-
-        private double findAppropriateZoomlevel(double accuracy) {
-            final int screenW = MobileUI.this.getPage().
-                    getBrowserWindowWidth();
-            double[] mPerPixel = new double[]{156412, 78206, 39103, 19551, 9776, 4888, 2444, 1222, 610.984, 305.492, 152.746, 76.373, 38.187, 19.093, 9.547, 4.773, 2.387, 1.193, 0.596, 0.298};
-            int zoomLevel = 0;
-            for (int i = 0; i < mPerPixel.length; i++) {
-                double metersOnScreen = mPerPixel[i] * screenW;
-                if (metersOnScreen / 15.0 > accuracy) {
-                    zoomLevel = i;
-                } else {
-                    break;
-                }
-            }
-            if (zoomLevel > 15) {
-                zoomLevel = 15;
-            }
-            return zoomLevel;
-        }
-    };
 
     @Override
     protected void init(VaadinRequest request) {
@@ -283,7 +121,7 @@ public class MobileUI extends UI {
                 getLastZoomLevel() != null) {
             map.setCenter(service.getLocationSettings().getLastCenter(),
                     service.getLocationSettings().
-                    getLastZoomLevel().doubleValue());
+                            getLastZoomLevel().doubleValue());
             viewPortInitialized = true;
         }
 
@@ -298,20 +136,16 @@ public class MobileUI extends UI {
                                 LocationSettings.class);
                         service.setLocationSettings(settings);
                         settingsView.bindData();
-                        if (settings.getTrackingInterval() != null) {
-                            centerNextLocation = false;
-                            amountOfRepeatedPositionRequests = 0;
-                            Geolocator.detect(positionCallBack);
+                        if (settings.getTrackingInterval() != null || settings.isLocationSharing()) {
+                            myPositionMarker.locate(false);
                         }
-                        if (settings.isLocationSharing()) {
-                            locate();
-                        }
+
                         if (service.getLocationSettings().getLayers().isEmpty()) {
                             loadLayersLegacy();
                         } else {
                             loadLayers(service.getLocationSettings().getLayers());
                         }
-                        
+
                         locationRepository.saveDeviceMappings(settings.getDeviceMappings());
 
                         if (!viewPortInitialized && settings.getLastCenter() != null && settings.
@@ -332,25 +166,20 @@ public class MobileUI extends UI {
             public void onFailure(LocalStorageCallback.FailureEvent error) {
                 Notification.show(
                         "Local storage not allowed by your device!? " + error.
-                        getMessage());
+                                getMessage());
             }
         });
 
         locate.setDisableOnClick(true);
         mapView.setLeftComponent(locate);
         locate.addClickListener(e -> {
-            centerNextLocation = true;
-            locate();
+            myPositionMarker.locate();
         });
 
+        setPollInterval(15000);
         addPollListener(e -> {
             locationSavingStrategy.save();
         });
-    }
-
-    private void locate() {
-        amountOfRepeatedPositionRequests = 0;
-        Geolocator.detect(positionCallBack);
     }
 
     LocationSavingStrategy locationSavingStrategy = new LocationSavingStrategy();
@@ -407,12 +236,13 @@ public class MobileUI extends UI {
     private void initMap() {
         map.removeAllComponents();
         final LTileLayer peruskartta = new LTileLayer(
-                "http://v4.tahvonen.fi/mvm75/tiles/peruskartta/{z}/{x}/{y}.png");
+                "https://v4.tahvonen.fi/mvm75/tiles/peruskartta/{z}/{x}/{y}.png");
 //        final LTileLayer peruskartta = new LTileLayer(
 //                "http://localhost:8888/tiles/peruskartta/{z}/{x}/{y}.png");
         peruskartta.setAttributionString("Maastokartta,Maanmittauslaitos");
         peruskartta.setDetectRetina(true);
         map.addLayer(peruskartta);
+        myPositionMarker.setMap(this, map);
         zoomToContent();
     }
 
@@ -458,5 +288,69 @@ public class MobileUI extends UI {
             map.zoomToContent();
         }
     }
+
+    public void updateMeAndOthersInGroup(Point mypoint, Double myaccuracy) {
+        others.removeAllComponents();
+        if (service.getLocationSettings().isLocationSharing()) {
+            final String myName = service.getLocationSettings().
+                    getUserName();
+            Location location = new Location(myName, JTSUtil.toPoint(mypoint),
+                    Instant.now(), myaccuracy);
+            final String groupName = service.getLocationSettings().
+                    getGroup();
+            locationRepository.saveLocation(groupName, location);
+            drawOthers(groupName, myName);
+            if (others.getParent() == null) {
+                map.addComponent(others);
+            }
+        }
+    }
+
+    public void drawOthers(final String groupName, final String myName) {
+        Instant now = Instant.now();
+        List<Location> locations = locationRepository.getLocations(
+                groupName);
+        for (Location l : locations) {
+            if (!l.getName().equals(myName)) {
+
+                LMarker lMarker = new LMarker(l.getPoint());
+                long secondsAgo = now.getEpochSecond() - l.
+                        getInstant().
+                        getEpochSecond();
+                long minutesAgo = secondsAgo / 60;
+                String msg = l.getName() + ", " + minutesAgo + "' ago, " + l.
+                        getAccuracy() + "m accur.";
+
+                if (l instanceof LocationWithTail) {
+                    LocationWithTail locationWithTail = (LocationWithTail) l;
+                    final Update u = locationWithTail.
+                            getLastUpdate();
+                    msg = msg + " bat:" + u.getBatteryLevel()
+                            + " GSM: " + u.getSignalLevel()
+                            + " Sat: " + u.getFixCount()
+                            + " Speed: " + u.getSpeed()
+                            + " Course: " + u.getCourse()
+                    ;
+
+                    com.vividsolutions.jts.geom.Point lastpoint = locationWithTail.
+                            getPoint();
+                    List<Point> points = locationWithTail.getTail().
+                            stream().map(p -> new Point(p.getY(), p.
+                            getX())).collect(
+                            Collectors.toList());
+                    points.add(new Point(lastpoint.getY(), lastpoint.
+                            getX()));
+                    LPolyline tail = new LPolyline(points.toArray(
+                            new Point[points.size()]));
+                    others.addComponent(tail);
+                }
+
+                lMarker.setPopup(msg);
+                others.addComponent(lMarker);
+
+            }
+        }
+    }
+
 
 }

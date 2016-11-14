@@ -16,12 +16,17 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
+import de.micromata.opengis.kml.v_2_2_0.Kml;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.peimari.maastokanta.backend.AppService;
+import org.peimari.maastokanta.backend.KmlWriter;
 import org.peimari.maastokanta.backend.LocationRepository;
 import org.peimari.maastokanta.backend.Repository;
 import org.peimari.maastokanta.domain.DeviceMapping;
@@ -29,6 +34,7 @@ import org.peimari.maastokanta.domain.LocationSettings;
 import org.peimari.maastokanta.domain.UserGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.viritin.MBeanFieldGroup;
+import org.vaadin.viritin.button.DownloadButton;
 import org.vaadin.viritin.fields.ElementCollectionField;
 import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.fields.TypedSelect;
@@ -100,7 +106,8 @@ public class SettingsView extends NavigationView {
         Collection value = deviceMappings.getValue();
         locationSettings.setDeviceMappings((List<DeviceMapping>) value);
 
-        locationRepository.saveDeviceMappings(locationSettings.getDeviceMappings());
+        locationRepository.saveDeviceMappings(locationSettings.
+                getDeviceMappings());
         try {
             String json = om.writeValueAsString(locationSettings);
             LocalStorage.get().put("locationSharing", json);
@@ -132,8 +139,7 @@ public class SettingsView extends NavigationView {
                 layers.add(newGroup.getId());
                 saveSettings();
 
-                MobileUI ui = (MobileUI) getNavigationManager().
-                        getPreviousComponent();
+                MobileUI ui = (MobileUI) UI.getCurrent();
                 ui.addGroup(newGroup);
                 if (getNavigationManager().
                         getCurrentComponent() == SettingsView.this) {
@@ -157,8 +163,7 @@ public class SettingsView extends NavigationView {
 
                 @Override
                 public void onSuccess(String value) {
-                    MobileUI ui = (MobileUI) getNavigationManager().
-                            getPreviousComponent();
+                    MobileUI ui = (MobileUI) UI.getCurrent();
                     ui.removeAllLayers();
                 }
 
@@ -168,6 +173,25 @@ public class SettingsView extends NavigationView {
                 }
             });
         });
+
+        Button download = new DownloadButton()
+                .setFileName("points.kml")
+                .setMimeType("application/vnd.google-earth.kml+xml")
+                .setWriter((OutputStream os) -> {
+                    Kml kml = null;
+                    for (String key : service.getLocationSettings().getLayers()) {
+                        UserGroup g = repo.getGroup(key);
+                        kml = KmlWriter.writeAsKml(g, kml);
+                    }
+                    try {
+                        boolean marshal = kml.marshal(os);
+                        os.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(KmlWriter.class.getName()).log(
+                        Level.SEVERE, null,
+                        ex);
+                    }
+                }).withCaption("Download as KML");
 
         locationSharing.setEnabled(false);
         FieldEvents.TextChangeListener locationCanBeEnabled = e -> {
@@ -202,7 +226,7 @@ public class SettingsView extends NavigationView {
         });
         devHelp.addComponent(navigationButton);
 
-        setContent(new CssLayout(addNewLayerGroup, clearAll,
+        setContent(new CssLayout(addNewLayerGroup, clearAll, download,
                 locationSharingLayout, new MVerticalLayout(devHelp,
                         deviceMappings).withCaption("Devices")));
     }

@@ -90,7 +90,7 @@ class GroupsView extends MVerticalLayout {
                             getProperty().getValue());
                     service.setGroup(group);
                     Page.getCurrent().setLocation(Page.getCurrent().
-                            getLocation().toString().replace("/auth", "/admin"));
+                            getLocation().toString().replace("/auth", "/admin").replaceAll("#.*", ""));
                 }
             }
         });

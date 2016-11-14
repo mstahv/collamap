@@ -71,7 +71,7 @@ public class MainUI extends UI implements Button.ClickListener,
 
     @Autowired
     Repository repo;
-
+    
     private MTable<SpatialFeature> table = new MTable().withFullWidth().
             withProperties("title", "Actions").withFullHeight().withFullWidth().
             expand("title");
