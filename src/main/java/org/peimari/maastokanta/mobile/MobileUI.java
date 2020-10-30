@@ -23,9 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -43,13 +40,13 @@ import org.peimari.maastokanta.tk102support.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.vaadin.addon.leaflet.AbstractLeafletVector;
-import org.vaadin.addon.leaflet.LCircle;
 import org.vaadin.addon.leaflet.LFeatureGroup;
 import org.vaadin.addon.leaflet.LLayerGroup;
 import org.vaadin.addon.leaflet.LMap;
 import org.vaadin.addon.leaflet.LMarker;
 import org.vaadin.addon.leaflet.LPolyline;
 import org.vaadin.addon.leaflet.LTileLayer;
+import org.vaadin.addon.leaflet.LWmsLayer;
 import org.vaadin.addon.leaflet.LeafletLayer;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.JTSUtil;
@@ -235,16 +232,27 @@ public class MobileUI extends UI {
 
     private void initMap() {
         map.removeAllComponents();
-        final LTileLayer peruskartta = new LTileLayer(
-                "https://v4.tahvonen.fi/mvm75/tiles/peruskartta/{z}/{x}/{y}.png");
+        LTileLayer peruskartta = new LTileLayer(
+            peruskarttaosoite);
+//        final LTileLayer peruskartta = new LTileLayer(
+//                "https://wf.virit.in/mvm75/tiles/peruskartta/{z}/{x}/{y}.png");
 //        final LTileLayer peruskartta = new LTileLayer(
 //                "http://localhost:8888/tiles/peruskartta/{z}/{x}/{y}.png");
         peruskartta.setAttributionString("Maastokartta,Maanmittauslaitos");
         peruskartta.setDetectRetina(true);
-        map.addLayer(peruskartta);
+        LWmsLayer mapant = new LWmsLayer();
+        mapant.setUrl("https://wmts.mapant.fi/wmts_EPSG3857.php?z={z}&x={x}&y={y}");
+        mapant.setMaxZoom(19);
+        mapant.setMinZoom(7);
+        mapant.setAttributionString("<a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/laser-scanning-data\" target=\"_blank\">Laser scanning</a> and <a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/topographic-database\" target=\"_blank\">topographic</a> data provided by the <a href=\"http://www.maanmittauslaitos.fi/en\" target=\"_blank\">National Land Survey of Finland</a> under the <a href=\"https://creativecommons.org/licenses/by/4.0/legalcode\">Creative Commons license</a>.");
+        map.addBaseLayer(peruskartta, "Peruskartta");
+        map.addBaseLayer(mapant, "MapAnt");
+        
         myPositionMarker.setMap(this, map);
         zoomToContent();
     }
+    
+    public static final String peruskarttaosoite = "https://wf.virit.in/tileproxy/peruskartta/{z}/{x}/{y}.png";
 
     private void showPopup(SpatialFeature f) {
         Notification.show("Notes for " + f.getTitle() + ":" + f.
@@ -311,7 +319,7 @@ public class MobileUI extends UI {
         List<Location> locations = locationRepository.getLocations(
                 groupName);
         for (Location l : locations) {
-            if (!l.getName().equals(myName)) {
+            if (l != null && !l.getName().equals(myName)) {
 
                 LMarker lMarker = new LMarker(l.getPoint());
                 long secondsAgo = now.getEpochSecond() - l.

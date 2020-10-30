@@ -51,11 +51,14 @@ import org.springframework.stereotype.Service;
 public class AppService {
 
     private static CoordinateReferenceSystem TM35_CRS;
+    private static CoordinateReferenceSystem KKJ3_CRS;
     private static CoordinateReferenceSystem GPS_CRS;
 
     static {
         try {
+            
             TM35_CRS = CRS.decode("EPSG:3067");
+            KKJ3_CRS = CRS.decode("EPSG:2393");
             GPS_CRS = CRS.decode("EPSG:4326");
         } catch (FactoryException ex) {
             Logger.getLogger(AppService.class.getName()).log(Level.SEVERE, null,

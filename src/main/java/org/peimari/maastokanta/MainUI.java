@@ -40,6 +40,7 @@ import org.peimari.maastokanta.domain.Person;
 import org.peimari.maastokanta.domain.PointFeature;
 import org.peimari.maastokanta.domain.SpatialFeature;
 import org.peimari.maastokanta.domain.UserGroup;
+import org.peimari.maastokanta.mobile.MobileUI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.vaadin.addon.leaflet.AbstractLeafletLayer;
@@ -47,6 +48,7 @@ import org.vaadin.addon.leaflet.LMap;
 import org.vaadin.addon.leaflet.LOpenStreetMapLayer;
 import org.vaadin.addon.leaflet.LPolygon;
 import org.vaadin.addon.leaflet.LTileLayer;
+import org.vaadin.addon.leaflet.LWmsLayer;
 import org.vaadin.addon.leaflet.LeafletClickEvent;
 import org.vaadin.addon.leaflet.LeafletClickListener;
 import org.vaadin.addon.leaflet.util.JTSUtil;
@@ -100,8 +102,10 @@ public class MainUI extends UI implements Button.ClickListener,
     private Button chooseGroup = new MButton("Other group...", this);
     private LMap map = new LMap();
     private LOpenStreetMapLayer osmTiles = new LOpenStreetMapLayer();
-    LTileLayer peruskartta = new LTileLayer(
-            "http://v3.tahvonen.fi/mvm71/tiles/peruskartta/{z}/{x}/{y}.png");
+    LTileLayer peruskartta = new LTileLayer(MobileUI.peruskarttaosoite);
+    LWmsLayer mapant = new LWmsLayer();
+//    LTileLayer peruskartta = new LTileLayer(
+//            "https://wf.virit.in/mvm75/tiles/peruskartta/{z}/{x}/{y}.png");
 
     @Autowired
     FeatureEditor editor;
@@ -169,6 +173,12 @@ public class MainUI extends UI implements Button.ClickListener,
         peruskartta.setAttributionString("Peruskartta: ©Maanmittauslaitos");
         peruskartta.setMaxZoom(18);
         peruskartta.setDetectRetina(true);
+        
+        mapant.setUrl("http://wmts.mapant.fi/wmts_EPSG3857.php?z={z}&x={x}&y={y}");
+        mapant.setMaxZoom(19);
+        mapant.setMinZoom(7);
+        mapant.setAttributionString("<a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/laser-scanning-data\" target=\"_blank\">Laser scanning</a> and <a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/topographic-database\" target=\"_blank\">topographic</a> data provided by the <a href=\"http://www.maanmittauslaitos.fi/en\" target=\"_blank\">National Land Survey of Finland</a> under the <a href=\"https://creativecommons.org/licenses/by/4.0/legalcode\">Creative Commons license</a>.");
+
 
         HorizontalLayout actions = new MHorizontalLayout(addNew, addNewWithRoute,
                 addNewWithArea, addFromAvailableGeometries,
@@ -208,7 +218,8 @@ public class MainUI extends UI implements Button.ClickListener,
 
         /* ... and map */
         map.removeAllComponents();
-        map.addLayer(peruskartta);
+        map.addBaseLayer(peruskartta, "Peruskartta");
+        map.addBaseLayer(mapant, "MapAnt");
         // map.addBaseLayer(osmTiles, "OSM");
         for (final SpatialFeature spatialEvent : features) {
             if (spatialEvent.getGeom() != null) {

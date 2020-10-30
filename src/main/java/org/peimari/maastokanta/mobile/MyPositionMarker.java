@@ -2,12 +2,10 @@
 package org.peimari.maastokanta.mobile;
 
 import com.vaadin.spring.annotation.UIScope;
-import java.util.logging.Logger;
 import org.peimari.maastokanta.backend.AppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.vaadin.addon.leaflet.*;
-import org.vaadin.addon.leaflet.jsonmodels.VectorStyle;
 import org.vaadin.addon.leaflet.shared.Point;
 
 /**

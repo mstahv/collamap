@@ -16,22 +16,28 @@
         <start-class>org.peimari.maastokanta.Application</start-class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <version.vaadin>7.7.3</version.vaadin>
-        <vaadin.plugin.version>7.7.3</vaadin.plugin.version>
+        <version.vaadin>7.7.14</version.vaadin>
+        <vaadin.plugin.version>7.7.14</vaadin.plugin.version>
         <geotools.version>10.2</geotools.version>
     </properties>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.4.1.RELEASE</version>
+        <version>1.5.17.RELEASE</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -39,10 +45,15 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <optional>true</optional>
-        </dependency>
-<!--        <dependency>
+        </dependency>-->
+        <!--        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
             <scope>provided</scope>
@@ -50,12 +61,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-<!--            <exclusions>
+            <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-logging</artifactId>
                 </exclusion>
-            </exclusions>-->
+            </exclusions>        
         </dependency>
         <dependency>
             <groupId>com.vaadin.addon</groupId>
@@ -105,11 +116,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
+       <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-push</artifactId>
             <version>${version.vaadin}</version>
         </dependency>
+        
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
@@ -124,7 +136,7 @@
         <dependency>
             <groupId>org.vaadin</groupId>
             <artifactId>viritin</artifactId>
-            <version>1.58</version>
+            <version>1.61</version>
         </dependency>
         <dependency>
             <groupId>org.scribe</groupId>
@@ -182,11 +194,17 @@
             <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache-web</artifactId>
             <version>2.0.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.vaadin.addon</groupId>
             <artifactId>v-leaflet</artifactId>
-            <version>1.0.4-SNAPSHOT</version>
+            <version>1.0.7</version>
         </dependency>
         <dependency>
             <groupId>de.micromata.jak</groupId>
@@ -194,6 +212,12 @@
             <version>2.2.1</version>
         </dependency>
         
+        <!--        <dependency>
+                    <groupId>org.geolatte</groupId>
+                    <artifactId>geolatte-geom</artifactId>
+                    <version>1.0.6</version>
+                </dependency>
+        -->
     </dependencies>
 
     <build>
@@ -247,7 +271,7 @@
                             <!-- These are non functional currently with spring boot directory structure
                             <goal>update-theme</goal>
                             <goal>update-widgetset</goal>-->
-                            <goal>compile-theme</goal>
+                            <!--<goal>compile-theme</goal>-->
                             <goal>compile</goal>
                         </goals>
                     </execution>
@@ -276,14 +300,14 @@
                 </executions>
             </plugin>
             
-            <plugin>
+            <!--            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.5</version>
                 <configuration>
                     <packagingExcludes>WEB-INF/lib/tomcat-*.jar,WEB-INF/lib/jetty-*.jar,WEB-INF/lib-provided/*.jar</packagingExcludes>
                 </configuration>
-            </plugin>
+            </plugin>-->
         </plugins>
         
     </build>
