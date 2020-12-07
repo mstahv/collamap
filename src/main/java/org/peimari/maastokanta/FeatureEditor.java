@@ -102,17 +102,23 @@ public class FeatureEditor extends Window implements ClickListener {
         /* Choose suitable custom field for geometry */
         if (feature instanceof PointFeature) {
             geometryField = location = new PointField();
+            location.setValue(((PointFeature) feature).getLocation());
         } else if (feature instanceof AreaFeature) {
             geometryField = area = new PolygonField();
+            area.setValue(((AreaFeature) feature).getArea());
             areaSize.setVisible(true);
             areaSize.setValue("--");
             area.addValueChangeListener(e -> 
                 areaSize.setValue(service.calculateSize((AreaFeature)feature))
             );
-            
         } else if (feature instanceof LineFeature) {
             geometryField = line = new LineStringField();
+            line.setValue(((LineFeature) feature).getLine());
         }
+        // manual binding as this is v7 form and v8 field
+        geometryField.addValueChangeListener(e -> {
+            feature.setGeom(e.getValue());
+        });
 
         /* Configure the sub window editing the pojo */
         setCaption("Edit feature");
@@ -141,7 +147,8 @@ public class FeatureEditor extends Window implements ClickListener {
 
         /* Bind data to fields */
         BeanBinder.bind(feature, this);
-
+        
+        
         if (feature instanceof PointFeature) {
             geometryField.getMap().setZoomLevel(DEFAULT_ZOOM_FOR_POINTS);
         }

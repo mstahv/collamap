@@ -103,9 +103,7 @@ public class MainUI extends UI implements Button.ClickListener,
     private LMap map = new LMap();
     private LOpenStreetMapLayer osmTiles = new LOpenStreetMapLayer();
     LTileLayer peruskartta = new LTileLayer(MobileUI.peruskarttaosoite);
-    LWmsLayer mapant = new LWmsLayer();
-//    LTileLayer peruskartta = new LTileLayer(
-//            "https://wf.virit.in/mvm75/tiles/peruskartta/{z}/{x}/{y}.png");
+//    LWmsLayer mapant = new LWmsLayer();
 
     @Autowired
     FeatureEditor editor;
@@ -177,10 +175,10 @@ public class MainUI extends UI implements Button.ClickListener,
         peruskartta.setMaxZoom(18);
         peruskartta.setDetectRetina(true);
         
-        mapant.setUrl("http://wmts.mapant.fi/wmts_EPSG3857.php?z={z}&x={x}&y={y}");
-        mapant.setMaxZoom(19);
-        mapant.setMinZoom(7);
-        mapant.setAttributionString("<a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/laser-scanning-data\" target=\"_blank\">Laser scanning</a> and <a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/topographic-database\" target=\"_blank\">topographic</a> data provided by the <a href=\"http://www.maanmittauslaitos.fi/en\" target=\"_blank\">National Land Survey of Finland</a> under the <a href=\"https://creativecommons.org/licenses/by/4.0/legalcode\">Creative Commons license</a>.");
+//        mapant.setUrl("http://wmts.mapant.fi/wmts_EPSG3857.php?z={z}&x={x}&y={y}");
+//        mapant.setMaxZoom(19);
+//        mapant.setMinZoom(7);
+//        mapant.setAttributionString("<a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/laser-scanning-data\" target=\"_blank\">Laser scanning</a> and <a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/topographic-database\" target=\"_blank\">topographic</a> data provided by the <a href=\"http://www.maanmittauslaitos.fi/en\" target=\"_blank\">National Land Survey of Finland</a> under the <a href=\"https://creativecommons.org/licenses/by/4.0/legalcode\">Creative Commons license</a>.");
 
 
         HorizontalLayout actions = new MHorizontalLayout(addNew, addNewWithRoute,
@@ -222,7 +220,7 @@ public class MainUI extends UI implements Button.ClickListener,
         /* ... and map */
         map.removeAllComponents();
         map.addBaseLayer(peruskartta, "Peruskartta");
-        map.addBaseLayer(mapant, "MapAnt");
+//        map.addBaseLayer(mapant, "MapAnt");
         // map.addBaseLayer(osmTiles, "OSM");
         for (final SpatialFeature spatialEvent : features) {
             if (spatialEvent.getGeom() != null) {

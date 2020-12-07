@@ -12,7 +12,7 @@ import org.vaadin.addon.leaflet.LWmsLayer;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
 
 @SpringBootApplication
-public class Application extends SpringBootServletInitializer {
+public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -31,12 +31,12 @@ public class Application extends SpringBootServletInitializer {
                 field.getMap().addBaseLayer(basemap, "Peruskartta");
                 field.getMap().setCustomInitOption("editable", true);
 
-                LWmsLayer mapant = new LWmsLayer();
-                mapant.setUrl("https://wmts.mapant.fi/wmts_EPSG3857.php?z={z}&x={x}&y={y}");
-                mapant.setMaxZoom(19);
-                mapant.setMinZoom(7);
-                mapant.setAttributionString("<a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/laser-scanning-data\" target=\"_blank\">Laser scanning</a> and <a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/topographic-database\" target=\"_blank\">topographic</a> data provided by the <a href=\"http://www.maanmittauslaitos.fi/en\" target=\"_blank\">National Land Survey of Finland</a> under the <a href=\"https://creativecommons.org/licenses/by/4.0/legalcode\">Creative Commons license</a>.");
-                field.getMap().addBaseLayer(mapant, "MapAnt");
+//                LWmsLayer mapant = new LWmsLayer();
+//                mapant.setUrl("https://wmts.mapant.fi/wmts_EPSG3857.php?z={z}&x={x}&y={y}");
+//                mapant.setMaxZoom(19);
+//                mapant.setMinZoom(7);
+//                mapant.setAttributionString("<a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/laser-scanning-data\" target=\"_blank\">Laser scanning</a> and <a href=\"http://www.maanmittauslaitos.fi/en/digituotteet/topographic-database\" target=\"_blank\">topographic</a> data provided by the <a href=\"http://www.maanmittauslaitos.fi/en\" target=\"_blank\">National Land Survey of Finland</a> under the <a href=\"https://creativecommons.org/licenses/by/4.0/legalcode\">Creative Commons license</a>.");
+//                field.getMap().addBaseLayer(mapant, "MapAnt");
 
             }
         });
@@ -51,8 +51,8 @@ public class Application extends SpringBootServletInitializer {
 //    public Filter gzipFiltering() {
 //        return new GzipFilter();
 //    }
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(Application.class);
-    }
+//    @Override
+//    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+//        return application.sources(Application.class);
+//    }
 }

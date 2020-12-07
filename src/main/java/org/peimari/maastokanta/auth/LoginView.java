@@ -86,7 +86,7 @@ public class LoginView extends MVerticalLayout implements RequestHandler {
         sb.provider(Google2Api.class);
         sb.apiKey(gpluskey);
         sb.apiSecret(gplussecret);
-        sb.scope("email");
+        sb.scope("openid email");
         String callBackUrl = Page.getCurrent().getLocation().toString();
         if (callBackUrl.contains("#")) {
             callBackUrl = callBackUrl.substring(0, callBackUrl.indexOf("#"));
@@ -104,14 +104,18 @@ public class LoginView extends MVerticalLayout implements RequestHandler {
             Token t = service.getAccessToken(null, v);
 
             OAuthRequest r = new OAuthRequest(Verb.GET,
-                    "https://www.googleapis.com/plus/v1/people/me");
+                    "https://openidconnect.googleapis.com/v1/userinfo");
+            
             service.signRequest(t, r);
             Response resp = r.send();
+            
+            
+            String body = resp.getBody();
 
-            GooglePlusAnswer answer = new Gson().fromJson(resp.getBody(),
-                    GooglePlusAnswer.class);
+            UserInfoResponse answer = new Gson().fromJson(body,
+                    UserInfoResponse.class);
 
-            setUser(answer.emails[0].value, answer.displayName);
+            setUser(answer.email);
 
             VaadinSession.getCurrent().removeRequestHandler(this);
 
@@ -123,12 +127,12 @@ public class LoginView extends MVerticalLayout implements RequestHandler {
         return false;
     }
 
-    public void setUser(String email, String displayName) {
+    public void setUser(String email) {
         Person person = repo.getPerson(email);
         if (person == null) {
             person = new Person();
             person.setEmail(email);
-            person.setDisplayName(displayName);
+//            person.setDisplayName(displayName);
             repo.persist(person);
         }
         appService.setPerson(person);
