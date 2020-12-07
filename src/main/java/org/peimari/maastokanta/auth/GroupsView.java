@@ -5,13 +5,13 @@
  */
 package org.peimari.maastokanta.auth;
 
-import com.vaadin.data.Property;
+import com.vaadin.v7.data.Property;
 import com.vaadin.server.Page;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.UIScope;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Table;
+import com.vaadin.v7.ui.Table;
 import com.vaadin.ui.TextField;
 import java.util.Map.Entry;
 import org.peimari.maastokanta.backend.AppService;

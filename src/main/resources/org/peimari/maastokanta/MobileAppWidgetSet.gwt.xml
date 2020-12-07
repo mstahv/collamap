@@ -8,12 +8,12 @@
         
     <!-- WS Compiler: manually edited -->
 
-    <inherits name="com.vaadin.addon.touchkit.gwt.TouchKitWidgetSet" />
-
+    <inherits name="org.vaadin.touchkit.gwt.TouchKitWidgetSet" />
+    <inherits name="com.vaadin.v7.Vaadin7WidgetSet" />
     <inherits name="org.vaadin.addon.leaflet.Widgetset" />
     
-    <generate-with class="org.peimari.maastokanta.gwt.OptimizedConnectorBundleLoaderFactory">
+<!--  Disabled to make this thing build with V8   <generate-with class="org.peimari.maastokanta.gwt.OptimizedConnectorBundleLoaderFactory">
         <when-type-assignable class="com.vaadin.client.metadata.ConnectorBundleLoader" />
-    </generate-with>
+    </generate-with>-->
     
 </module>

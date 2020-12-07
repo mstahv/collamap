@@ -1,11 +1,6 @@
 package org.peimari.maastokanta.mobile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vaadin.addon.touchkit.extensions.LocalStorage;
-import com.vaadin.addon.touchkit.extensions.LocalStorageCallback;
-import com.vaadin.addon.touchkit.ui.NavigationButton;
-import com.vaadin.addon.touchkit.ui.NavigationManager;
-import com.vaadin.addon.touchkit.ui.NavigationView;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -50,6 +45,11 @@ import org.vaadin.addon.leaflet.LWmsLayer;
 import org.vaadin.addon.leaflet.LeafletLayer;
 import org.vaadin.addon.leaflet.shared.Point;
 import org.vaadin.addon.leaflet.util.JTSUtil;
+import org.vaadin.touchkit.extensions.LocalStorage;
+import org.vaadin.touchkit.extensions.LocalStorageCallback;
+import org.vaadin.touchkit.ui.NavigationButton;
+import org.vaadin.touchkit.ui.NavigationManager;
+import org.vaadin.touchkit.ui.NavigationView;
 
 /**
  * @author Matti Tahvonen <matti@vaadin.com>
@@ -190,7 +190,7 @@ public class MobileUI extends UI {
                 service.getLocationSettings().setLastCenter(map.getCenter());
                 service.getLocationSettings().setLastZoomLevel(map.
                         getZoomLevel().intValue());
-                if (lastUpdate == null || lastUpdate.isBefore(Instant.now().
+                if (settingsView != null && lastUpdate == null || lastUpdate.isBefore(Instant.now().
                         minusSeconds(30))) {
                     settingsView.saveSettings();
                     lastUpdate = Instant.now();

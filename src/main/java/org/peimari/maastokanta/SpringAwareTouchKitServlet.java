@@ -1,11 +1,11 @@
 package org.peimari.maastokanta;
 
-import com.vaadin.addon.touchkit.settings.TouchKitSettings;
 import com.vaadin.spring.server.SpringVaadinServlet;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.vaadin.touchkit.settings.TouchKitSettings;
 
 /**
  * License: http://www.wtfpl.net

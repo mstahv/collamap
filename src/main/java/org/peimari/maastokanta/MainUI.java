@@ -16,6 +16,7 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
@@ -55,8 +56,8 @@ import org.vaadin.addon.leaflet.util.JTSUtil;
 import org.vaadin.viritin.button.ConfirmButton;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.button.PrimaryButton;
-import org.vaadin.viritin.fields.MTable;
-import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritinv7.fields.MTable;
+import org.vaadin.viritinv7.fields.MTextField;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
@@ -65,7 +66,6 @@ import org.vaadin.viritin.layouts.MVerticalLayout;
  * @author mattitahvonenitmill
  */
 @SpringUI(path = "/admin")
-@EnableAutoConfiguration
 @Widgetset("org.peimari.maastokanta.AppWidgetSet")
 @Theme("valo")
 public class MainUI extends UI implements Button.ClickListener,
@@ -130,6 +130,9 @@ public class MainUI extends UI implements Button.ClickListener,
 
     @Override
     protected void init(VaadinRequest request) {
+        
+        Grid grid = new Grid<>();
+        
         if (service.isDevMode() && service.getPerson() == null) {
             Person person = repo.getPerson("matti@vaadin.com");
             if (person == null) {
@@ -154,10 +157,10 @@ public class MainUI extends UI implements Button.ClickListener,
             final SpatialFeature feature = (SpatialFeature) se;
             Button edit = new MButton(FontAwesome.EDIT, e -> editor.
                     init(feature));
-
+            
             Button delete = new ConfirmButton(FontAwesome.TRASH_O,
                     "Are you really sure about this desctrutive operation??",
-                    e -> {
+                    () -> {
                         group.getFeatures().remove(feature);
                         loadEvents(filter.getValue());
                     });

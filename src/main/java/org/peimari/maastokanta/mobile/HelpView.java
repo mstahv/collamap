@@ -1,7 +1,7 @@
 
 package org.peimari.maastokanta.mobile;
 
-import com.vaadin.addon.touchkit.ui.NavigationView;
+import org.vaadin.touchkit.ui.NavigationView;
 import org.vaadin.viritin.label.RichText;
 
 /**

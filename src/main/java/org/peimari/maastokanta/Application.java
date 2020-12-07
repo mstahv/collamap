@@ -3,21 +3,15 @@ package org.peimari.maastokanta;
 import com.vaadin.server.VaadinServlet;
 import org.peimari.maastokanta.mobile.MobileUI;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.vaadin.addon.leaflet.LTileLayer;
 import org.vaadin.addon.leaflet.LWmsLayer;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
 
-@Configuration
-@ComponentScan
-@EnableAutoConfiguration
-@EnableConfigurationProperties
+@SpringBootApplication
 public class Application extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
