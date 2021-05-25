@@ -12,7 +12,7 @@ import org.vaadin.addon.leaflet.LWmsLayer;
 import org.vaadin.addon.leaflet.util.AbstractJTSField;
 
 @SpringBootApplication
-public class Application {
+public class Application extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -51,8 +51,9 @@ public class Application {
 //    public Filter gzipFiltering() {
 //        return new GzipFilter();
 //    }
-//    @Override
-//    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-//        return application.sources(Application.class);
-//    }
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(Application.class);
+    }
 }
